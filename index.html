@@ -61,8 +61,8 @@
         .crypto-btn {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            padding: 0.4rem;
+            border-radius: 0.4rem;
+            padding: 0.25rem;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -741,7 +741,7 @@
                                 className: 'px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-500'
                             }, '🤑 Buy All')
                         ),
-                        h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-3' },
+                        h('div', { className: 'grid grid-cols-3 md:grid-cols-4 gap-2' },
                             Object.entries(CRYPTOS).map(([symbol, info]) => {
                                 const price = prices[symbol];
                                 const basePrice = info.basePrice;
@@ -752,14 +752,14 @@
                                 return h('div', { key: symbol, className: 'crypto-btn', onClick: () => buy(symbol) },
                                     h('div', { className: 'flex justify-between items-center mb-1' },
                                         h('div', { className: 'flex items-center gap-2' },
-                                            h('span', { className: 'text-xl', style: { color: info.color } }, info.icon),
-                                            h('span', { className: 'font-bold text-sm' }, symbol)
+                                            h('span', { className: 'text-lg', style: { color: info.color } }, info.icon),
+                                            h('span', { className: 'font-bold text-xs' }, symbol)
                                         ),
-                                        h('span', { className: `text-sm font-bold ${change >= 0 ? 'price-up' : 'price-down'}` }, 
+                                        h('span', { className: `text-xs font-bold ${change >= 0 ? 'price-up' : 'price-down'}` }, 
                                             `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
                                         )
                                     ),
-                                    h('p', { className: 'text-base font-bold mono' }, '$' + price.toFixed(price < 1 ? 4 : 0)),
+                                    h('p', { className: 'text-xs font-bold mono' }, '$' + price.toFixed(price < 1 ? 4 : 0)),
                                     owned > 0 && h('p', { className: 'text-xs', style: { color: 'var(--text-muted)' } }, 
                                         owned.toFixed(4) + ' = $' + value.toFixed(0)
                                     )
