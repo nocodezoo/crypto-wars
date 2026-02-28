@@ -8,6 +8,8 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
+    <script src="crypto-historical.js"></script>
+    <script src="events.js"></script>
     <style>
         :root {
             --bg: #0a0a0f;
@@ -127,7 +129,6 @@
 <body>
     <div id="root"></div>
 
-    <script src="events.js"></script>
     <script>
         const { useState, useEffect, useRef } = React;
         const h = React.createElement;
@@ -180,7 +181,7 @@
             insider: { name: 'Insider', desc: 'Price boost', cost: 2000, effect: 'insider', value: 0.05 }
         };
 
-        const EVENTS = GAME_EVENTS || [
+        const EVENTS = [
             { text: '🐋 WHALE DUMP - A whale sells everything!', effect: 'all', value: -0.30 },
             { text: '🚀 BULL RUN - To the moon!', effect: 'all', value: 0.40 },
             { text: '📢 ELON TWEETS - Elon tweets about crypto!', effect: 'random', value: 0.25 },
@@ -285,10 +286,20 @@
             };
 
             const startGame = (length) => {
-                // Initialize prices
+                // Generate historical price data for this game
+                const gameData = generateGameData(length);
+                const startDate = getDateFromDay(gameData.startDay);
+                
+                // Initialize prices from historical data
                 const initialPrices = {};
-                CRYPTOS.forEach(c => initialPrices[c.symbol] = c.price);
+                CRYPTOS.forEach(c => {
+                    const priceData = gameData.cryptoPrices[c.symbol];
+                    initialPrices[c.symbol] = priceData ? priceData[0].price : c.price;
+                });
 
+                // Store game data for price lookups
+                window.gameData = gameData;
+                
                 setGameLength(length);
                 setDay(1);
                 setCash(5000);
@@ -301,8 +312,8 @@
                 setWalletCapacity(500);
                 setGameOver(false);
                 setGameStarted(true);
-                setLogs(['Day 1 started - You owe the loan shark $5000!']);
-                setEvents(['Welcome to Crypto Wars! Pay off your debt!']);
+                setLogs([`📅 Game started: ${startDate}`, 'You owe the loan shark $5000!']);
+                setEvents([`Historical data: ${startDate}`, 'Pay off your debt!']);
                 localStorage.removeItem('cryptoWarsSave');
             };
 
@@ -317,19 +328,23 @@
                     return;
                 }
 
-                // Random price changes
+                // Get historical prices for this day
                 const newPrices = { ...prices };
-                CRYPTOS.forEach(c => {
-                    const luckyBonus = (upgrades.luckyCoin || 0) * 0.01;
-                    const insiderBonus = (upgrades.insider || 0) * 0.02;
-                    const change = (Math.random() - 0.5) * 0.2 * location.multiplier + luckyBonus + insiderBonus;
-                    newPrices[c.symbol] = c.price * (1 + change);
-                });
+                const nextDay = day + 1;
+                
+                if (window.gameData && window.gameData.cryptoPrices) {
+                    CRYPTOS.forEach(c => {
+                        const priceData = window.gameData.cryptoPrices[c.symbol];
+                        if (priceData && priceData[day]) {
+                            newPrices[c.symbol] = priceData[day].price;
+                        }
+                    });
+                }
                 setPrices(newPrices);
 
                 // Random event (40% chance now)
                 if (Math.random() < 0.4) {
-                    const event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+                    const event = getRandomEvent() || EVENTS[Math.floor(Math.random() * EVENTS.length)];
                     addEvent(event.text);
                     addLog(event.text);
 
@@ -351,7 +366,8 @@
                     } else if (event.effect === 'cash') {
                         setCash(c => c + event.value);
                     } else if (event.effect === 'single' && event.target) {
-                        newPrices[event.target] *= (1 + event.value);
+                        const target = event.target === 'RANDOM' ? CRYPTOS[Math.floor(Math.random() * CRYPTOS.length)].symbol : event.target;
+                        newPrices[target] *= (1 + event.value);
                     }
                 }
 
