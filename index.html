@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Wars</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card-bg: #12121a;
+            --border: #1e1e2e;
+            --primary: #f7931a;
+            --primary-glow: rgba(247, 147, 26, 0.3);
+            --text: #e0e0e0;
+            --text-muted: #6b6b7b;
+            --success: #00d395;
+            --danger: #ff4757;
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at top, rgba(247, 147, 26, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 211, 149, 0.03) 0%, transparent 40%);
+        }
+        
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .glow { box-shadow: 0 0 30px var(--primary-glow); }
+        
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .crypto-btn {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .crypto-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .price-up { color: var(--success); }
+        .price-down { color: var(--danger); }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px var(--primary-glow); }
+            50% { box-shadow: 0 0 40px var(--primary-glow); }
+        }
+        
+        .pulsing { animation: pulse-glow 2s infinite; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        const { useState, useEffect, createElement: h } = React;
+        
+        const CRYPTOS = {
+            BTC: { name: 'Bitcoin', symbol: 'BTC', icon: '₿', color: '#f7931a' },
+            ETH: { name: 'Ethereum', symbol: 'ETH', icon: 'Ξ', color: '#627eea' },
+            SOL: { name: 'Solana', symbol: 'SOL', icon: '◎', color: '#00ffa3' },
+            ADA: { name: 'Cardano', symbol: 'ADA', icon: '₳', color: '#0033ad' },
+            DOGE: { name: 'Dogecoin', symbol: 'DOGE', icon: 'Ð', color: '#c2a633' },
+            XRP: { name: 'Ripple', symbol: 'XRP', icon: '✕', color: '#23292f' }
+        };
+        
+        const EXCHANGES = [
+            { name: 'Coinbase', fee: 0.006 },
+            { name: 'Binance', fee: 0.004 },
+            { name: 'Kraken', fee: 0.005 },
+            { name: 'DEX', fee: 0.008 }
+        ];
+        
+        const INITIAL_PRICES = {
+            BTC: 42000, ETH: 2500, SOL: 95, ADA: 0.55, DOGE: 0.08, XRP: 0.62
+        };
+        
+        const GAME_DAYS = 30;
+        const INITIAL_CASH = 5000;
+        const INITIAL_DEBT = 100000;
+        const DAILY_DEBT_INTEREST = 0.05;
+        
+        function App() {
+            const [day, setDay] = useState(1);
+            const [cash, setCash] = useState(INITIAL_CASH);
+            const [debt, setDebt] = useState(INITIAL_DEBT);
+            const [portfolio, setPortfolio] = useState({});
+            const [prices, setPrices] = useState({...INITIAL_PRICES});
+            const [currentExchange, setCurrentExchange] = useState(EXCHANGES[0]);
+            const [view, setView] = useState('dashboard');
+            const [log, setLog] = useState(['Welcome to Crypto Wars!', 'Day 1 - You have $5,000 and $100,000 in debt.', 'Make as much profit as you can in 30 days!']);
+            
+            const addLog = (msg) => setLog(l => [msg, ...l].slice(0, 10));
+            
+            const getPortfolioValue = () => {
+                return Object.entries(portfolio).reduce((sum, [sym, qty]) => {
+                    return sum + (qty * prices[sym]);
+                }, 0);
+            };
+            
+            const getNetWorth = () => cash + getPortfolioValue() - debt;
+            
+            const fluctuatePrices = () => {
+                const newPrices = {};
+                Object.keys(prices).forEach(sym => {
+                    const change = (Math.random() - 0.5) * 0.2;
+                    newPrices[sym] = Math.max(prices[sym] * (1 + change), prices[sym] * 0.1);
+                });
+                setPrices(newPrices);
+            };
+            
+            const nextDay = () => {
+                fluctuatePrices();
+                const interest = debt * DAILY_DEBT_INTEREST;
+                setDebt(d => d + interest);
+                setDay(d => d + 1);
+                addLog(`Day ${day + 1} - Debt interest: $${interest.toFixed(0)}`);
+                
+                if (Math.random() < 0.2) {
+                    const event = getRandomEvent();
+                    addLog(`📢 ${event}`);
+                }
+            };
+            
+            const getRandomEvent = () => {
+                const events = [
+                    '🐋 Whale moved the market!',
+                    '📢 Elon tweeted something...',
+                    '🎓 SEC made a statement.',
+                    '🔥 Crypto hack revealed!',
+                    '🌊 Market pump!',
+                    '📉 Liquidation cascade!',
+                    '🎁 Airdrop received!',
+                    '💎 Diamond hands!',
+                    '🐕 Doge is pumping!',
+                    '🔌 Exchange went down!'
+                ];
+                return events[Math.floor(Math.random() * events.length)];
+            };
+            
+            const buy = (symbol) => {
+                const price = prices[symbol] * (1 + currentExchange.fee);
+                const maxQty = Math.floor(cash / price);
+                if (maxQty <= 0) {
+                    addLog(`Not enough cash to buy ${symbol}!`);
+                    return;
+                }
+                const qty = prompt(`Buy how much ${symbol}?\nMax: ${maxQty}\nPrice: $${price.toFixed(2)}`, maxQty);
+                if (qty && !isNaN(qty) && qty > 0) {
+                    const amount = Math.min(parseFloat(qty), maxQty);
+                    const cost = amount * price;
+                    setCash(c => c - cost);
+                    setPortfolio(p => ({...p, [symbol]: (p[symbol] || 0) + amount}));
+                    addLog(`Bought ${amount.toFixed(4)} ${symbol} for $${cost.toFixed(2)}`);
+                }
+            };
+            
+            const sell = (symbol) => {
+                const qty = portfolio[symbol] || 0;
+                if (qty <= 0) {
+                    addLog(`No ${symbol} to sell!`);
+                    return;
+                }
+                const price = prices[symbol] * (1 - currentExchange.fee);
+                const sellQty = prompt(`Sell how much ${symbol}?\nOwned: ${qty}\nPrice: $${price.toFixed(2)}`, qty);
+                if (sellQty && !isNaN(sellQty) && sellQty > 0) {
+                    const amount = Math.min(parseFloat(sellQty), qty);
+                    const revenue = amount * price;
+                    setCash(c => c + revenue);
+                    setPortfolio(p => ({...p, [symbol]: p[symbol] - amount}));
+                    addLog(`Sold ${amount.toFixed(4)} ${symbol} for $${revenue.toFixed(2)}`);
+                }
+            };
+            
+            const payDebt = () => {
+                const maxPay = cash;
+                const pay = prompt(`Pay off debt?\nOwed: $${debt.toFixed(0)}\nHave: $${cash.toFixed(0)}`, maxPay);
+                if (pay && !isNaN(pay) && pay > 0) {
+                    const amount = Math.min(parseFloat(pay), cash, debt);
+                    setCash(c => c - amount);
+                    setDebt(d => d - amount);
+                    addLog(`Paid $${amount.toFixed(0)} toward debt`);
+                }
+            };
+            
+            const changeExchange = () => {
+                const currentIdx = EXCHANGES.indexOf(currentExchange);
+                const nextIdx = (currentIdx + 1) % EXCHANGES.length;
+                setCurrentExchange(EXCHANGES[nextIdx]);
+                addLog(`Switched to ${EXCHANGES[nextIdx].name} (fee: ${(EXCHANGES[nextIdx].fee * 100).toFixed(1)}%)`);
+            };
+            
+            const isGameOver = day > GAME_DAYS;
+            const netWorth = getNetWorth();
+            
+            if (isGameOver) {
+                return h('div', { className: "min-h-screen flex items-center justify-center p-8" },
+                    h('div', { className: "card max-w-lg w-full text-center" },
+                        h('h1', { className: "text-4xl font-black mb-4", style: { color: 'var(--primary)' } }, "Game Over!"),
+                        h('p', { className: "text-xl mb-2" }, `Days: ${GAME_DAYS}`),
+                        h('p', { className: "text-2xl font-bold mb-2" }, `Final Net Worth: $${netWorth.toFixed(2)}`),
+                        h('p', { className: "text-4xl font-black mb-6", style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, 
+                            netWorth >= 0 ? 'PROFIT! 💰' : 'BANKRUPT! 💀'
+                        ),
+                        h('button', { 
+                            onClick: () => window.location.reload(),
+                            className: "px-8 py-4 bg-orange-500 text-white font-bold rounded-xl text-xl hover:scale-105 transition-transform"
+                        }, "Play Again")
+                    )
+                );
+            }
+            
+            return h('div', { className: "min-h-screen p-4 md:p-8" },
+                h('div', { className: "max-w-4xl mx-auto" },
+                    // Header
+                    h('div', { className: "text-center mb-8" },
+                        h('h1', { className: "text-5xl md:text-6xl font-black tracking-tighter mb-2", style: { color: 'var(--primary)' } }, "CRYPTO WARS"),
+                        h('p', { className: "text-mono text-sm", style: { color: 'var(--text-muted)' } }, `Day ${day} of ${GAME_DAYS}`)
+                    ),
+                    
+                    // Stats
+                    h('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" },
+                        h('div', { className: "card text-center" },
+                            h('p', { className: "text-xs uppercase tracking-widest mb-1", style: { color: 'var(--text-muted)' } }, "Cash"),
+                            h('p', { className: "text-xl font-bold mono", style: { color: 'var(--success)' } }, `$${cash.toFixed(2)}`)
+                        ),
+                        h('div', { className: "card text-center" },
+                            h('p', { className: "text-xs uppercase tracking-widest mb-1", style: { color: 'var(--text-muted)' } }, "Debt"),
+                            h('p', { className: "text-xl font-bold mono", style: { color: 'var(--danger)' } }, `$${debt.toFixed(0)}`)
+                        ),
+                        h('div', { className: "card text-center" },
+                            h('p', { className: "text-xs uppercase tracking-widest mb-1", style: { color: 'var(--text-muted)' } }, "Portfolio"),
+                            h('p', { className: "text-xl font-bold mono" }, `$${getPortfolioValue().toFixed(2)}`)
+                        ),
+                        h('div', { className: "card text-center" },
+                            h('p', { className: "text-xs uppercase tracking-widest mb-1", style: { color: 'var(--text-muted)' } }, "Net Worth"),
+                            h('p', { className: "text-xl font-bold mono", style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, `$${netWorth.toFixed(2)}`)
+                        )
+                    ),
+                    
+                    // Exchange
+                    h('div', { className: "card mb-6 flex justify-between items-center" },
+                        h('div', null,
+                            h('p', { className: "text-xs uppercase tracking-widest", style: { color: 'var(--text-muted)' } }, "Current Exchange"),
+                            h('p', { className: "text-xl font-bold" }, currentExchange.name),
+                            h('p', { className: "text-sm mono", style: { color: 'var(--text-muted)' } }, `Fee: ${(currentExchange.fee * 100).toFixed(1)}%`)
+                        ),
+                        h('button', { 
+                            onClick: changeExchange,
+                            className: "px-4 py-2 bg-gray-800 text-white rounded-lg font-bold text-sm hover:bg-gray-700"
+                        }, "Switch Exchange")
+                    ),
+                    
+                    // Market
+                    h('div', { className: "mb-6" },
+                        h('h2', { className: "text-xl font-bold mb-4" }, "📈 Market"),
+                        h('div', { className: "grid grid-cols-2 md:grid-cols-3 gap-3" },
+                            Object.entries(CRYPTOS).map(([symbol, info]) => {
+                                const price = prices[symbol];
+                                const prevPrice = INITIAL_PRICES[symbol];
+                                const change = ((price - prevPrice) / prevPrice) * 100;
+                                const owned = portfolio[symbol] || 0;
+                                const value = owned * price;
+                                
+                                return h('div', { key: symbol, className: "crypto-btn" },
+                                    h('div', { className: "flex justify-between items-start mb-2" },
+                                        h('div', { className: "flex items-center gap-2" },
+                                            h('span', { className: "text-2xl", style: { color: info.color } }, info.icon),
+                                            h('span', { className: "font-bold" }, symbol)
+                                        ),
+                                        h('span', { className: `text-sm mono ${change >= 0 ? 'price-up' : 'price-down'}` }, 
+                                            `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
+                                        )
+                                    ),
+                                    h('p', { className: "text-lg font-bold mono mb-2" }, `$${price.toFixed(2)}`),
+                                    owned > 0 && h('p', { className: "text-xs mb-2", style: { color: 'var(--text-muted)' } }, 
+                                        `Owned: ${owned.toFixed(4)} ($${value.toFixed(2)})`
+                                    ),
+                                    h('div', { className: "flex gap-2" },
+                                        h('button', { 
+                                            onClick: () => buy(symbol),
+                                            className: "flex-1 py-2 bg-green-600 text-white rounded text-sm font-bold hover:bg-green-500"
+                                        }, "Buy"),
+                                        h('button', { 
+                                            onClick: () => sell(symbol),
+                                            className: "flex-1 py-2 bg-red-600 text-white rounded text-sm font-bold hover:bg-red-500",
+                                            disabled: owned <= 0
+                                        }, "Sell")
+                                    )
+                                );
+                            })
+                        )
+                    ),
+                    
+                    // Actions
+                    h('div', { className: "grid grid-cols-2 gap-4 mb-6" },
+                        h('button', { 
+                            onClick: nextDay,
+                            className: "py-4 bg-orange-500 text-white font-bold rounded-xl text-lg hover:bg-orange-400 pulsing"
+                        }, "⏭ Next Day"),
+                        h('button', { 
+                            onClick: payDebt,
+                            className: "py-4 bg-blue-600 text-white font-bold rounded-xl text-lg hover:bg-blue-500"
+                        }, "💰 Pay Debt")
+                    ),
+                    
+                    // Log
+                    h('div', { className: "card" },
+                        h('h3', { className: "font-bold mb-2" }, "📜 Activity Log"),
+                        h('div', { className: "space-y-1" },
+                            log.map((msg, i) => 
+                                h('p', { key: i, className: "text-sm mono", style: { color: i === 0 ? 'var(--text)' : 'var(--text-muted)' } }, msg)
+                            )
+                        )
+                    )
+                )
+            );
+        }
+        
+        ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+    </script>
+</body>
+</html>
