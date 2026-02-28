@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Wars - Final Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap');
+        
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%); font-family: 'Rajdhani', sans-serif; }
+        .mockup { background: #1e1e2e; border-radius: 40px; padding: 14px; height: 620px; overflow: hidden; position: relative; border: 3px solid #ff6b35; }
+        .screen { background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%); height: 100%; border-radius: 28px; overflow: hidden; position: relative; }
+        
+        /* Crypto Grid - Full Space to Left of Terminal */
+        .crypto-area {
+            position: absolute;
+            left: 0;
+            right: 140px; /* Leave space for terminal */
+            top: 60px;
+            bottom: 50px;
+            padding: 4px;
+            overflow-y: auto;
+        }
+        .crypto-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 4px; 
+        }
+        .crypto-card { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 4px 2px; border-radius: 6px; 
+            background: linear-gradient(135deg, #2a2a3e 0%, #1e1e2e 100%); 
+            min-height: 55px;
+        }
+        
+        /* Glowing Icons */
+        .coin-icon { 
+            width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 10px; margin-bottom: 1px; box-shadow: 0 0 10px currentColor;
+        }
+        .coin-symbol { font-weight: 700; font-size: 9px; letter-spacing: 0.5px; }
+        .coin-price { font-size: 8px; text-align: center; }
+        .coin-change { font-size: 7px; font-weight: 600; text-align: center; }
+        
+        .price-up { color: #00ff88; text-shadow: 0 0 6px rgba(0,255,136,0.6); }
+        .price-down { color: #ff4488; text-shadow: 0 0 6px rgba(255,68,136,0.6); }
+        
+        /* 8-BIT TERMINAL */
+        .bit-terminal { 
+            position: absolute; right: 0; top: 0; bottom: 0; width: 140px; 
+            background: #001a00; border-left: 3px solid #00ff00; padding: 8px; 
+            font-family: 'Courier New', monospace; font-size: 9px; color: #00ff00; 
+            overflow-y: auto; box-shadow: -4px 0 15px rgba(0,255,0,0.15);
+        }
+        .bit-title { 
+            text-align: center; border-bottom: 2px solid #00ff00; padding-bottom: 4px; margin-bottom: 6px; 
+            text-shadow: 0 0 10px #00ff00; font-weight: bold; font-size: 9px;
+        }
+        .bit-log-line { margin-bottom: 6px; line-height: 1.4; white-space: normal; word-wrap: break-word; font-size: 8px; }
+        .bit-stats { 
+            position: absolute; bottom: 8px; left: 8px; right: 8px; border-top: 2px solid #00ff00; 
+            padding-top: 6px; font-size: 8px;
+        }
+        
+        /* Header */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 140px;
+            height: 60px;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%);
+        }
+        
+        .progress-ring { 
+            width: 40px; height: 40px; border-radius: 50%; 
+            background: conic-gradient(#ff6b35 var(--progress), #333 var(--progress)); 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 3px 10px rgba(255,107,53,0.5); 
+            flex-shrink: 0;
+        }
+        .progress-inner { 
+            width: 32px; height: 32px; background: linear-gradient(135deg, #1a1a2e 0%, #12121a 100%); 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-size: 9px; font-weight: 800; 
+        }
+        
+        /* Bottom Toolbar */
+        .bottom-toolbar { 
+            position: absolute; bottom: 0; left: 0; right: 140px; display: flex; justify-content: space-around; 
+            padding: 6px 4px; background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 100%); 
+            border-top: 2px solid #ff6b35; 
+        }
+        .toolbar-btn { 
+            padding: 6px 10px; border-radius: 6px; font-weight: 800; font-size: 9px; 
+            text-align: center; min-width: 50px;
+        }
+        .btn-travel { background: linear-gradient(135deg, #00b894, #00a884); color: #fff; box-shadow: 0 0 10px rgba(0,184,148,0.5); }
+        .btn-upgrades { background: linear-gradient(135deg, #fdcb6e, #f39c12); color: #000; box-shadow: 0 0 10px rgba(253,203,110,0.5); }
+        .btn-day { background: linear-gradient(135deg, #ff6b35, #ff8c42); color: #fff; box-shadow: 0 0 10px rgba(255,107,53,0.6); }
+        .btn-exchange { background: linear-gradient(135deg, #74b9ff, #0984e3); color: #fff; box-shadow: 0 0 10px rgba(116,185,255,0.5); }
+        .btn-wallet { background: linear-gradient(135deg, #a29bfe, #6c5ce7); color: #fff; box-shadow: 0 0 10px rgba(162,155,254,0.5); }
+        
+        .text-neon-orange { color: #ff6b35; text-shadow: 0 0 10px rgba(255,107,53,0.6); }
+    </style>
+</head>
+<body class="p-6">
+    <h1 class="text-2xl font-bold text-white mb-2">Crypto Wars - Final Mockup</h1>
+    <p class="text-gray-400 mb-4">All 12 cryptos visible (4 cols × 3 rows), between left edge and green terminal</p>
+    
+    <div class="max-w-lg mx-auto">
+        <div class="mockup">
+            <div class="screen">
+                <!-- Header -->
+                <div class="header">
+                    <div class="progress-ring" style="--progress: 17%">
+                        <div class="progress-inner text-white">5/30</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-neon-orange" style="font-family: 'Orbitron'">CRYPTO WARS</div>
+                        <div class="text-[8px] text-gray-400">Tap coin to trade</div>
+                    </div>
+                    <div class="ml-auto text-right">
+                        <div class="text-sm font-bold text-green-400">$5,000</div>
+                        <div class="text-[7px] text-gray-500">cash</div>
+                    </div>
+                </div>
+                
+                <!-- Crypto Grid Area - Left of Terminal -->
+                <div class="crypto-area">
+                    <div class="crypto-grid">
+                        <!-- BTC -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #f7931a; color: #fff;">₿</div>
+                            <div class="coin-symbol text-white">BTC</div>
+                            <div class="coin-price text-white">$42K</div>
+                            <div class="coin-change price-up">+2.5%</div>
+                        </div>
+                        <!-- ETH -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #627eea; color: #fff;">Ξ</div>
+                            <div class="coin-symbol text-white">ETH</div>
+                            <div class="coin-price text-white">$2.5K</div>
+                            <div class="coin-change price-down">-1.2%</div>
+                        </div>
+                        <!-- SOL -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #00ffa3; color: #000;">◎</div>
+                            <div class="coin-symbol text-white">SOL</div>
+                            <div class="coin-price text-white">$95</div>
+                            <div class="coin-change price-up">+5.8%</div>
+                        </div>
+                        <!-- ADA -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #0033ad; color: #fff;">₳</div>
+                            <div class="coin-symbol text-white">ADA</div>
+                            <div class="coin-price text-white">$0.55</div>
+                            <div class="coin-change price-down">-0.8%</div>
+                        </div>
+                        <!-- DOGE -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #c2a633; color: #000;">Ð</div>
+                            <div class="coin-symbol text-white">DOGE</div>
+                            <div class="coin-price text-white">$0.08</div>
+                            <div class="coin-change price-up">+12%</div>
+                        </div>
+                        <!-- XRP -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #23292f; color: #fff;">✕</div>
+                            <div class="coin-symbol text-white">XRP</div>
+                            <div class="coin-price text-white">$0.62</div>
+                            <div class="coin-change price-up">+1.1%</div>
+                        </div>
+                        <!-- LINK -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #375bd2; color: #fff;">⬡</div>
+                            <div class="coin-symbol text-white">LINK</div>
+                            <div class="coin-price text-white">$15</div>
+                            <div class="coin-change price-up">+0.5%</div>
+                        </div>
+                        <!-- UNI -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #ff007a; color: #fff;">🦄</div>
+                            <div class="coin-symbol text-white">UNI</div>
+                            <div class="coin-price text-white">$7</div>
+                            <div class="coin-change price-down">-2.1%</div>
+                        </div>
+                        <!-- DOT -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #e6007a; color: #fff;">●</div>
+                            <div class="coin-symbol text-white">DOT</div>
+                            <div class="coin-price text-white">$7</div>
+                            <div class="coin-change price-up">+3.2%</div>
+                        </div>
+                        <!-- AVAX -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #e84142; color: #fff;">▲</div>
+                            <div class="coin-symbol text-white">AVAX</div>
+                            <div class="coin-price text-white">$35</div>
+                            <div class="coin-change price-up">+8.5%</div>
+                        </div>
+                        <!-- MATIC -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #8247e5; color: #fff;">⬟</div>
+                            <div class="coin-symbol text-white">MATIC</div>
+                            <div class="coin-price text-white">$0.85</div>
+                            <div class="coin-change price-up">+1.5%</div>
+                        </div>
+                        <!-- ATOM -->
+                        <div class="crypto-card">
+                            <div class="coin-icon" style="background: #2e3148; color: #fff;">⚛</div>
+                            <div class="coin-symbol text-white">ATOM</div>
+                            <div class="coin-price text-white">$9</div>
+                            <div class="coin-change price-down">-0.3%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 8-BIT TERMINAL -->
+                <div class="bit-terminal">
+                    <div class="bit-title">◄ LOG ►</div>
+                    <div class="bit-log-line" style="color:#00ff00">> Day 5 started</div>
+                    <div class="bit-log-line" style="color:#00dd00">> BTC +2.5%</div>
+                    <div class="bit-log-line" style="color:#00bb00">> ETH -1.2%</div>
+                    <div class="bit-log-line" style="color:#009900">> SOL +5.8%</div>
+                    <div class="bit-log-line" style="color:#007700">> whale buy</div>
+                    <div class="bit-log-line" style="color:#005500">> DOGE +12%</div>
+                    <div class="bit-stats">
+                        <div style="color:#00ff00">D:5 C:$5K</div>
+                        <div style="color:#ff4444">D:$50K</div>
+                    </div>
+                </div>
+                
+                <!-- Bottom Toolbar -->
+                <div class="bottom-toolbar">
+                    <div class="toolbar-btn btn-travel">TRAVEL</div>
+                    <div class="toolbar-btn btn-upgrades">UPGRADES</div>
+                    <div class="toolbar-btn btn-day">DAY</div>
+                    <div class="toolbar-btn btn-exchange">EXCHANGE</div>
+                    <div class="toolbar-btn btn-wallet">WALLET</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <p class="text-gray-400 text-sm">4 columns × 3 rows = 12 cryptos | All visible between left edge and green terminal</p>
+        </div>
+    </div>
+</body>
+</html>
