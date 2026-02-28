@@ -61,8 +61,8 @@
         .crypto-btn {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border: 1px solid var(--border);
-            border-radius: 0.4rem;
-            padding: 0.25rem;
+            border-radius: 0.75rem;
+            padding: 1rem;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -116,8 +116,9 @@
         
         .bit-log div {
             margin-bottom: 6px;
-            white-space: normal;
-            word-wrap: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             line-height: 1.4;
         }
         
@@ -191,10 +192,10 @@
             XRP: { name: 'Ripple', symbol: 'XRP', icon: '✕', color: '#23292f', basePrice: 0.62, volatility: 0.20 },
             LINK: { name: 'Chainlink', symbol: 'LINK', icon: '⬡', color: '#375bd2', basePrice: 15, volatility: 0.23 },
             UNI: { name: 'Uniswap', symbol: 'UNI', icon: '🦄', color: '#ff007a', basePrice: 7, volatility: 0.28 },
-            DOT: { name: 'Polkadot', symbol: 'DOT', icon: '●', color: '#e6007a', basePrice: 7, volatility: 0.25 },
-            AVAX: { name: 'Avalanche', symbol: 'AVAX', icon: '🔺', color: '#e84142', basePrice: 35, volatility: 0.30 },
-            MATIC: { name: 'Polygon', symbol: 'MATIC', icon: '⬟', color: '#8247e5', basePrice: 0.85, volatility: 0.28 },
-            ATOM: { name: 'Cosmos', symbol: 'ATOM', icon: '⚛', color: '#2e3148', basePrice: 9, volatility: 0.22 }
+            DOT: { name: 'Polkadot', icon: '●', color: '#e6007a', basePrice: 7, volatility: 0.25 },
+            AVAX: { name: 'Avalanche', icon: '▲', color: '#e84142', basePrice: 35, volatility: 0.30 },
+            MATIC: { name: 'Polygon', icon: '⬟', color: '#8247e5', basePrice: 0.85, volatility: 0.28 },
+            ATOM: { name: 'Cosmos', icon: '⚛', color: '#2e3148', basePrice: 9, volatility: 0.22 }
         };
         
         // === EXCHANGES ===
@@ -710,7 +711,7 @@
                 )
             );
             
-            return h('div', { className: 'min-h-screen pl-48 p-2 pb-24 md:pl-56 md:p-4 md:pb-28' },
+            return h('div', { className: 'min-h-screen pl-48 p-4 md:pl-56 md:p-6' },
                 renderBitPanel(),
                 h('div', { className: 'max-w-5xl mx-auto' },
                     // HEADER
@@ -725,14 +726,36 @@
                         )
                     ),
                     
-                    // STATS - compact row
-                    h('div', { className: 'flex justify-between items-center mb-3 gap-1' },
-                        h('div', { className: 'flex items-center gap-1' },
-                            h('span', { className: 'text-xs font-bold', style: { color: 'var(--text-muted)' } }, 'D' + day + '/30'),
-                            h('span', { className: 'text-xs', style: { color: '#00ff00' } }, ' $' + cash.toFixed(0)),
-                            h('span', { className: 'text-xs', style: { color: 'var(--danger)' } }, ' $' + debt.toFixed(0)),
-                            h('span', { className: 'text-xs font-bold', style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, ' $' + netWorth.toFixed(0))
+                    // STATS
+                    h('div', { className: 'grid grid-cols-2 md:grid-cols-5 gap-2 mb-5' },
+                        h('div', { className: 'card text-center py-2' }, 
+                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Cash'), 
+                            h('p', { className: 'text-sm font-bold mono', style: { color: 'var(--success)' } }, '$' + cash.toFixed(0))
+                        ),
+                        h('div', { className: 'card text-center py-2' }, 
+                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Loan Shark'), 
+                            h('p', { className: 'text-sm font-bold mono', style: { color: debt > INITIAL_DEBT ? 'var(--danger)' : 'var(--warning)' } }, '$' + debt.toFixed(0))
+                        ),
+                        h('div', { className: 'card text-center py-2' }, 
+                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, '🦈 DeFi'), 
+                            h('p', { className: 'text-sm font-bold mono', style: { color: defiDebt > 0 ? '#aa44ff' : 'var(--text-muted)' } }, '$' + defiDebt.toFixed(0))
+                        ),
+                        h('div', { className: 'card text-center py-2' }, 
+                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Portfolio'), 
+                            h('p', { className: 'text-sm font-bold mono' }, '$' + getPortfolioValue().toFixed(0))
+                        ),
+                        h('div', { className: 'card text-center py-2' }, 
+                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Net Worth'), 
+                            h('p', { className: 'text-sm font-bold mono', style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, '$' + netWorth.toFixed(0))
                         )
+                    ),
+                    
+                    // QUICK ACTIONS
+                    h('div', { className: 'flex gap-2 mb-5 overflow-x-auto flex-wrap' },
+                        h('button', { onClick: () => setShowModal('travel'), className: 'px-4 py-2 bg-gray-800 rounded-lg font-bold text-sm' }, '✈️ Travel'),
+                        h('button', { onClick: () => setShowModal('upgrades'), className: 'px-4 py-2 bg-purple-600 rounded-lg font-bold text-sm' }, '🔧 Upgrades'),
+                        h('button', { onClick: () => setShowModal('exchange'), className: 'px-4 py-2 bg-gray-700 rounded-lg font-bold text-sm' }, currentExchange.name),
+                        h('button', { onClick: () => setShowModal('portfolio'), className: 'px-4 py-2 bg-gray-700 rounded-lg font-bold text-sm' }, '📊 Portfolio')
                     ),
                     
                     // MARKET
@@ -744,7 +767,7 @@
                                 className: 'px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-500'
                             }, '🤑 Buy All')
                         ),
-                        h('div', { className: 'grid grid-cols-3 md:grid-cols-4 gap-2' },
+                        h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-3' },
                             Object.entries(CRYPTOS).map(([symbol, info]) => {
                                 const price = prices[symbol];
                                 const basePrice = info.basePrice;
@@ -752,44 +775,43 @@
                                 const owned = portfolio[symbol] || 0;
                                 const value = owned * price;
                                 
-                                return h('div', { key: symbol, className: 'crypto-btn flex items-center justify-between py-1 px-2', onClick: () => buy(symbol) },
-                                    h('div', { className: 'flex items-center gap-1' },
-                                        h('span', { className: 'text-sm', style: { color: info.color } }, info.icon),
-                                        h('span', { className: 'font-bold text-xs' }, symbol)
+                                return h('div', { key: symbol, className: 'crypto-btn', onClick: () => buy(symbol) },
+                                    h('div', { className: 'flex justify-between items-center mb-1' },
+                                        h('div', { className: 'flex items-center gap-2' },
+                                            h('span', { className: 'text-3xl', style: { color: info.color } }, info.icon),
+                                            h('span', { className: 'font-bold text-lg' }, symbol)
+                                        ),
+                                        h('span', { className: `text-sm font-bold ${change >= 0 ? 'price-up' : 'price-down'}` }, 
+                                            `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
+                                        )
                                     ),
-                                    h('span', { className: 'text-xs font-bold mono' }, '$' + (price < 1 ? price.toFixed(4) : price.toFixed(0))),
-                                    h('span', { className: `text-xs font-bold ${change >= 0 ? 'price-up' : 'price-down'}` }, 
-                                        `${change >= 0 ? '+' : ''}${change.toFixed(0)}%`
+                                    h('p', { className: 'text-2xl font-bold mono' }, '$' + price.toFixed(price < 1 ? 4 : 0)),
+                                    owned > 0 && h('p', { className: 'text-xs', style: { color: 'var(--text-muted)' } }, 
+                                        owned.toFixed(4) + ' = $' + value.toFixed(0)
                                     )
                                 );
                             })
                         )
                     ),
                     
-                    // ACTIONS - compact row
-                    h('div', { className: 'flex gap-1 mb-2' },
+                    // ACTIONS
+                    h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-2 mb-5' },
                         h('button', { 
                             onClick: nextDay,
-                            className: 'flex-1 py-1 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded'
-                        }, '⏭ DAY'),
+                            className: 'py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl lava-glow pulsing'
+                        }, '⏭ Next Day'),
                         h('button', { 
                             onClick: payDebt,
-                            className: 'flex-1 py-1 text-xs bg-blue-600 text-white font-bold rounded'
-                        }, '💳 DEBT'),
+                            className: 'py-3 bg-blue-600 text-white font-bold rounded-xl'
+                        }, '💳 Pay Debt'),
+                        h('button', { 
+                            onClick: buyAll,
+                            className: 'py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-500'
+                        }, '🤑 Buy All'),
                         defiDebt > 0 ? 
                             h('button', { 
                                 onClick: payDefiDebt,
-                                className: 'flex-1 py-1 text-xs bg-purple-600 text-white font-bold rounded'
-                            }, '🦈 PAY') :
-                            h('button', { 
-                                onClick: getDefiLoan,
-                                className: 'flex-1 py-1 text-xs bg-purple-600 text-white font-bold rounded'
-                            }, '🦈 LOAN'),
-                        h('button', { 
-                            onClick: buyAll,
-                            className: 'flex-1 py-1 text-xs bg-green-600 text-white font-bold rounded'
-                        }, '🤑 ALL')
-                    ),
+                                className: 'py-3 bg-purple-600 text-white font-bold rounded-xl'
                             }, '🦈 Pay DeFi') :
                             h('button', { 
                                 onClick: getDefiLoan,
@@ -797,42 +819,13 @@
                             }, '🦈 DeFi Loan')
                     ),
                     
-                    // TIKTOK-STYLE BOTTOM NAV
-                    h('div', { 
-                        className: 'fixed bottom-0 left-0 right-0 flex justify-around items-center py-3 px-2',
-                        style: { 
-                            background: 'rgba(10,10,18,0.95)', 
-                            borderTop: '1px solid rgba(255,107,53,0.3)',
-                            paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
-                        }
-                    },
-                        h('button', { onClick: () => setShowModal('travel'), className: 'flex flex-col items-center gap-1' },
-                            h('span', { className: 'text-2xl' }, '✈️'),
-                            h('span', { className: 'text-xs text-gray-400' }, 'Travel')
-                        ),
-                        h('button', { onClick: () => setShowModal('upgrades'), className: 'flex flex-col items-center gap-1' },
-                            h('span', { className: 'text-2xl' }, '🔧'),
-                            h('span', { className: 'text-xs text-gray-400' }, 'Upgrades')
-                        ),
-                        h('button', { onClick: nextDay, className: 'flex flex-col items-center gap-1' },
-                            h('span', { className: 'text-3xl' }, '⏭️'),
-                            h('span', { className: 'text-xs text-gray-400' }, 'Day')
-                        ),
-                        h('button', { onClick: () => setShowModal('exchange'), className: 'flex flex-col items-center gap-1' },
-                            h('span', { className: 'text-2xl' }, '🏦'),
-                            h('span', { className: 'text-xs text-gray-400' }, 'Exchange')
-                        ),
-                        h('button', { onClick: () => setShowModal('portfolio'), className: 'flex flex-col items-center gap-1' },
-                            h('span', { className: 'text-2xl' }, '📊'),
-                            h('span', { className: 'text-xs text-gray-400' }, 'Portfolio')
-                        )
-                    ),
-                    
-                    // LOG - visible without scroll
-                    h('div', { className: 'text-xs mb-2' },
-                        h('span', { className: 'font-bold text-green-400' }, 'LOG: '),
-                        log.slice(0, 3).map((msg, i) => 
-                            h('span', { key: i, className: 'mr-2', style: { color: i === 0 ? '#00ff00' : '#888' } }, '>' + msg.substring(0, 20))
+                    // LOG
+                    h('div', { className: 'card' },
+                        h('h3', { className: 'font-bold mb-2' }, '📜 Activity'),
+                        h('div', { className: 'space-y-1 max-h-40 overflow-y-auto' },
+                            log.map((msg, i) => 
+                                h('p', { key: i, className: 'text-sm mono', style: { color: i === 0 ? 'var(--text)' : 'var(--text-muted)' } }, msg)
+                            )
                         )
                     ),
                     
