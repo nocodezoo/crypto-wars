@@ -83,6 +83,57 @@
         
         .pulsing { animation: pulse-lava 2s infinite; }
         
+        /* 8-bit terminal panel */
+        .bit-panel {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 180px;
+            background: #000;
+            border-right: 3px solid #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #00ff00;
+            padding: 10px;
+            overflow: hidden;
+            z-index: 50;
+        }
+        
+        .bit-title {
+            text-align: center;
+            border-bottom: 2px solid #00ff00;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        
+        .bit-log {
+            height: calc(100% - 120px);
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .bit-log div {
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .bit-stats {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            border-top: 2px solid #00ff00;
+            padding-top: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .bit-panel { display: none; }
+        }
+        
         @keyframes flicker {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.8; }
@@ -202,7 +253,7 @@
             const [defiDebt, setDefiDebt] = useState(0);
             const [defiLoans, setDefiLoans] = useState([]); // Track active loans
             
-            const addLog = (msg) => setLog(l => [msg, ...l].slice(0, 12));
+            const addLog = (msg) => setLog(l => [msg, ...l].slice(0, 20));
             
             // === HELPERS ===
             const getPortfolioValue = () => {
@@ -650,7 +701,27 @@
             }
             
             // === RENDER ===
-            return h('div', { className: 'min-h-screen p-4 md:p-6' },
+            // 8-bit terminal panel
+            const renderBitPanel = () => h('div', { className: 'bit-panel' },
+                h('div', { className: 'bit-title' }, '◄ CRYPTO LOG ►'),
+                h('div', { className: 'bit-log' },
+                    log.map((msg, i) => 
+                        h('div', { key: i, style: { 
+                            color: i === 0 ? '#00ff00' : i < 5 ? '#00cc00' : '#006600',
+                            textShadow: i === 0 ? '0 0 5px #00ff00' : 'none'
+                        }}, '> ' + msg)
+                    )
+                ),
+                h('div', { className: 'bit-stats' },
+                    h('div', null, 'DAY:' + day),
+                    h('div', null, 'CASH:$' + cash.toFixed(0)),
+                    h('div', null, 'DEBT:$' + debt.toFixed(0)),
+                    h('div', null, 'NET:$' + getNetWorth().toFixed(0))
+                )
+            );
+            
+            return h('div', { className: 'min-h-screen pl-48 p-4 md:pl-56 md:p-6' },
+                renderBitPanel(),
                 h('div', { className: 'max-w-5xl mx-auto' },
                     // HEADER
                     h('div', { className: 'text-center mb-6' },
