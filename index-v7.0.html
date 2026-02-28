@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Wars 🦞🔥</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap">
+    <script src="crypto-historical.js"></script>
+    <script src="events.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card-bg: #12121a;
+            --border: #1e1e2e;
+            --primary: #ff6b35;
+            --primary-glow: rgba(255, 107, 53, 0.4);
+            --text: #e0e0e0;
+            --text-muted: #6b6b7b;
+            --success: #00ff88;
+            --danger: #ff4488;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: 'Rajdhani', sans-serif; background: var(--bg); color: var(--text); }
+
+        /* Header */
+        .header { position: absolute; top: 15px; left: 0; right: 140px; height: 45px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%); }
+        .progress-ring { width: 32px; height: 32px; border-radius: 50%; background: conic-gradient(#ff6b35 var(--progress), #333 var(--progress)); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(255,107,53,0.5); flex-shrink: 0; }
+        .progress-inner { width: 26px; height: 26px; background: linear-gradient(135deg, #1a1a2e 0%, #12121a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+
+        /* Event Area - THE STORY */
+        .event-area { position: absolute; bottom: 85px; left: 0; right: 0; height: 120px; padding: 6px 10px; background: linear-gradient(180deg, #0a0a14 0%, #1a1a2e 100%); border-top: 3px solid #ff6b35; overflow-y: auto; scrollbar-width: none; }
+        .event-area::-webkit-scrollbar { display: none; }
+        .event-title { font-size: 16px; color: #ff6b35; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .event-text { font-size: 13px; color: #aaa; line-height: 1.4; margin-bottom: 4px; }
+        .event-highlight { color: #00ff88; font-weight: 600; }
+
+        /* Wallet Display */
+        /* Wallet inside log */
+        .wallet-in-log { padding: 6px 0; border-top: 2px solid #a29bfe; margin-top: 6px; }
+        .wallet-in-log-title { font-size: 11px; color: #a29bfe; font-weight: bold; margin-bottom: 3px; display: flex; justify-content: space-between; }
+        .wallet-in-log-bar { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+        .wallet-in-log-bar-fill { height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7); border-radius: 4px; transition: width 0.3s; }
+        .wallet-in-log-coins { display: flex; flex-wrap: wrap; gap: 3px; }
+        .wallet-in-log-coin { padding: 2px 5px; border-radius: 3px; font-size: 8px; font-weight: bold; }
+        .wallet-bar { width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+        .wallet-bar-fill { height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7); border-radius: 2px; transition: width 0.3s; }
+        .wallet-holdings { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-start; align-items: center; }
+        .wallet-coin { padding: 2px 6px; border-radius: 4px; font-size: 12px; white-space: nowrap; font-weight: bold; text-shadow: 0 0 5px currentColor; }
+
+        /* Crypto Grid */
+        .crypto-area { position: absolute; left: 0; right: 140px; top: 60px; bottom: 210px; padding: 4px; overflow-y: auto; }
+        .crypto-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; height: 100%; }
+        .crypto-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 4px; border-radius: 8px; background: linear-gradient(135deg, #2a2a3e 0%, #1e1e2e 100%); min-height: 60px; cursor: pointer; }
+        .crypto-card:hover { border: 2px solid #ff6b35; transform: scale(1.02); }
+        .coin-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; margin-bottom: 2px; box-shadow: 0 0 10px currentColor; }
+        .coin-symbol { font-weight: 700; font-size: 14px; }
+        .coin-price { font-size: 12px; }
+        .coin-change { font-size: 10px; font-weight: 600; }
+        .price-up { color: #00ff88; text-shadow: 0 0 6px rgba(0,255,136,0.6); }
+        .price-down { color: #ff4488; text-shadow: 0 0 6px rgba(255,68,136,0.6); }
+
+        /* 8-BIT TERMINAL */
+        .bit-terminal { position: absolute; right: 0; top: 30px; bottom: 210px; width: 140px; background: #0a0a0a; border-left: 3px solid #444; padding: 6px; font-family: 'Rajdhani', sans-serif; font-size: 11px; color: #ffffff; overflow-y: auto; scrollbar-width: none; }
+        .bit-terminal::-webkit-scrollbar { display: none; }
+        .bit-title { text-align: center; border-bottom: 2px solid #444; padding-bottom: 4px; margin-bottom: 6px; color: #aaa; font-weight: bold; font-size: 11px; }
+        .bit-log-line { margin-bottom: 6px; line-height: 1.3; font-size: 10px; color: #ddd; }
+        .bit-stats { position: absolute; bottom: 8px; left: 8px; right: 8px; border-top: 2px solid #444; padding-top: 4px; font-size: 12px; }
+
+        /* Bottom Toolbar */
+        .bottom-toolbar { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 6px 4px; background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 100%); border-top: 3px solid #ff6b35; }
+        .toolbar-btn { padding: 8px 12px; border-radius: 8px; font-weight: 800; font-size: 9px; text-align: center; min-width: 50px; cursor: pointer; }
+        .btn-travel { background: linear-gradient(135deg, #00b894, #00a884); color: #fff; box-shadow: 0 0 10px rgba(0,184,148,0.5); }
+        .btn-upgrades { background: linear-gradient(135deg, #fdcb6e, #f39c12); color: #000; box-shadow: 0 0 10px rgba(253,203,110,0.5); }
+        .btn-day { background: linear-gradient(135deg, #ff6b35, #ff8c42); color: #fff; box-shadow: 0 0 10px rgba(255,107,53,0.6); animation: pulse-glow 2s infinite; }
+        .btn-exchange { background: linear-gradient(135deg, #74b9ff, #0984e3); color: #fff; box-shadow: 0 0 10px rgba(116,185,255,0.5); }
+        .btn-defi { background: linear-gradient(135deg, #fd79a8, #e84393); color: #fff; box-shadow: 0 0 10px rgba(253,121,168,0.5); }
+
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal-content { background: linear-gradient(135deg, #1a1a2e 0%, #12121a 100%); border: 2px solid #ff6b35; border-radius: 16px; padding: 20px; max-width: 90%; max-height: 80%; overflow-y: auto; }
+        .modal-title { font-size: 20px; font-weight: 700; color: #ff6b35; margin-bottom: 16px; text-align: center; }
+        .modal-close { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #666; }
+
+        /* Game Over Modal */
+        .game-over { text-align: center; }
+        .game-over h1 { font-size: 32px; color: #ff6b35; margin-bottom: 10px; }
+        .game-over .stats { font-size: 18px; margin: 10px 0; }
+
+        /* Trade Modal */
+        .trade-input { width: 100%; padding: 10px; border: 2px solid #333; border-radius: 8px; background: #0a0a0f; color: #fff; font-size: 16px; margin: 10px 0; }
+        .trade-btn { padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; margin: 5px; cursor: pointer; }
+        .btn-buy { background: linear-gradient(135deg, #00ff88, #00cc6a); color: #000; }
+        .btn-sell { background: linear-gradient(135deg, #ff4488, #cc2255); color: #fff; }
+
+        .text-neon-orange { color: #ff6b35; text-shadow: 0 0 12px rgba(255,107,53,0.6); }
+
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,107,53,0.4); }
+            50% { box-shadow: 0 0 25px rgba(255,107,53,0.8), 0 0 40px rgba(255,140,66,0.4); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes flash-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes flash-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-glow { animation: pulse-glow 2s infinite; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .event-flash-green { animation: flash-green 0.5s ease-out; }
+        .event-flash-red { animation: flash-red 0.5s ease-out; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        const { useState, useEffect, useRef } = React;
+        const h = React.createElement;
+
+        // === GAME CONSTANTS ===
+        const GAME_DAYS_OPTIONS = [30, 45, 60];
+        const CRYPTOS = [
+            { symbol: 'BTC', name: 'Bitcoin', icon: '₿', color: '#f7931a', price: 42000 },
+            { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', color: '#627eea', price: 2500 },
+            { symbol: 'SOL', name: 'Solana', icon: '◎', color: '#00ffa3', price: 95 },
+            { symbol: 'ADA', name: 'Cardano', icon: '₳', color: '#0033ad', price: 0.55 },
+            { symbol: 'DOGE', name: 'Dogecoin', icon: 'Ð', color: '#c2a633', price: 0.08 },
+            { symbol: 'XRP', name: 'Ripple', icon: '✕', color: '#23292f', price: 0.62 },
+            { symbol: 'LINK', name: 'Chainlink', icon: '⬡', color: '#375bd2', price: 15 },
+            { symbol: 'UNI', name: 'Uniswap', icon: '🦄', color: '#ff007a', price: 7 },
+            { symbol: 'DOT', name: 'Polkadot', icon: '●', color: '#e6007a', price: 7 },
+            { symbol: 'AVAX', name: 'Avalanche', icon: '▲', color: '#e84142', price: 35 },
+            { symbol: 'MATIC', name: 'Polygon', icon: '⬟', color: '#8247e5', price: 0.85 },
+            { symbol: 'ATOM', name: 'Cosmos', icon: '⚛', color: '#2e3148', price: 9 }
+        ];
+
+        const LOCATIONS = [
+            { name: 'New York', multiplier: 1.0 },
+            { name: 'Tokyo', multiplier: 1.1 },
+            { name: 'London', multiplier: 1.05 },
+            { name: 'Dubai', multiplier: 1.15 },
+            { name: 'Singapore', multiplier: 1.08 },
+            { name: 'Hong Kong', multiplier: 1.12 },
+            { name: 'Berlin', multiplier: 0.95 },
+            { name: 'Sao Paulo', multiplier: 0.9 }
+        ];
+
+        const EXCHANGES = [
+            { name: 'Coinbase', fee: 0.006, risk: 0.1, description: 'Reliable & regulated', color: '#0052ff' },
+            { name: 'Binance', fee: 0.004, risk: 0.15, description: 'Low fees, high liquidity', color: '#f0b90b' },
+            { name: 'Kraken', fee: 0.005, risk: 0.08, description: 'Best security', color: '#5741d9' },
+            { name: 'KuCoin', fee: 0.004, risk: 0.12, description: 'Altcoin heaven', color: '#23af91' },
+            { name: 'Gemini', fee: 0.007, risk: 0.05, description: 'Trustworthy & easy', color: '#00dccd' },
+            { name: 'DEX', fee: 0.008, risk: 0.25, description: 'No KYC, max privacy', color: '#ff6b35' }
+        ];
+
+        const UPGRADES = {
+            wallet: { name: 'Wallet+', desc: '+500 capacity', cost: 1000, effect: 'capacity', value: 500 },
+            whaleAlert: { name: 'Whale Alert', desc: 'See whale trades', cost: 500, effect: 'whale', value: 1 },
+            diamondHands: { name: 'Diamond Hands', desc: 'Reduce sell tax', cost: 800, effect: 'diamond', value: 0.1 },
+            fomoShield: { name: 'FOMO Shield', desc: 'Less event impact', cost: 600, effect: 'fomo', value: 0.3 },
+            luckyCoin: { name: 'Lucky Coin', desc: 'Better events', cost: 1200, effect: 'lucky', value: 0.15 },
+            hodlMaster: { name: 'HODL Master', desc: 'Daily bonus', cost: 1500, effect: 'hodl', value: 100 },
+            paperHands: { name: 'Paper Hands', desc: 'Faster selling', cost: 400, effect: 'paper', value: 0.25 },
+            insider: { name: 'Insider', desc: 'Price boost', cost: 2000, effect: 'insider', value: 0.05 }
+        };
+
+        const EVENTS = [
+            { text: '🐋 WHALE DUMP - A whale sells everything!', effect: 'all', value: -0.30 },
+            { text: '🚀 BULL RUN - To the moon!', effect: 'all', value: 0.40 },
+            { text: '📢 ELON TWEETS - Elon tweets about crypto!', effect: 'random', value: 0.25 },
+            { text: '📉 BLOODBATH - Massive selloff!', effect: 'all', value: -0.40 },
+            { text: '🔌 EXCHANGE DOWN - Maintenance!', effect: 'random', value: 0.20 },
+            { text: '🏄 DEFI SUMMER - Returns!', effect: 'all', value: 0.30 },
+            { text: '💰 AIRDROP - Free tokens!', effect: 'cash', value: 500 },
+            { text: '💎 DIAMOND HANDS - HODL!', effect: 'all', value: 0.15 },
+            { text: '🐕 DOGE PUMP - Much wow!', effect: 'single', target: 'DOGE', value: 0.50 },
+            { text: '❄️ WINTER IS COMING - Crypto winter!', effect: 'all', value: -0.25 },
+            // 20 more events
+            { text: '🎉 LISTING DAY - New exchange listing!', effect: 'all', value: 0.35 },
+            { text: '😱 PANIC SELL - Everyone sells!', effect: 'all', value: -0.25 },
+            { text: '🤫 INSIDER TIP - Buy now!', effect: 'all', value: 0.20 },
+            { text: '📰 FUD NEWS - Fear spreads!', effect: 'random', value: -0.15 },
+            { text: '🔥 BURN NOTICE - Tokens burned!', effect: 'all', value: 0.18 },
+            { text: '👮‍♂️ SEC NEWS - Regulation worry!', effect: 'all', value: -0.12 },
+            { text: '🚀 PARTNER ANNOUNCEMENT - Big news!', effect: 'all', value: 0.28 },
+            { text: '💻 HACK ALERT - Exchange compromised!', effect: 'random', value: -0.35 },
+            { text: '🌟 CELEBRITY ENDORSEMENT - Stars align!', effect: 'single', value: 0.45 },
+            { text: '📊 WHITEPAPER UPDATE - Game changer!', effect: 'all', value: 0.22 },
+            { text: '🎰 CASINO NIGHT - High volatility!', effect: 'all', value: 0.30 },
+            { text: '😴 SLEEPY MARKET - Nothing happens...', effect: 'none', value: 0 },
+            { text: '🐋 WHALE BUY - Big money moving in!', effect: 'all', value: 0.25 },
+            { text: '🎁 REWARD DROP - Loyalty rewards!', effect: 'cash', value: 300 },
+            { text: '🔒 WALLET UPGRADE - Security boost!', effect: 'all', value: 0.08 },
+            { text: '🤖 BOT WARS - Trading bots fight!', effect: 'all', value: 0.18 },
+            { text: '📱 APP CRASH - Technical issues!', effect: 'random', value: -0.10 },
+            { text: '🌍 GLOBAL NEWS - Economy shifts!', effect: 'all', value: 0.12 },
+            { text: '🎲 GAMBLE SATURDAY - Risk it all!', effect: 'all', value: 0.40 },
+            { text: '💸 STABLECOIN DEPEG - Chaos ensues!', effect: 'all', value: -0.20 },
+            { text: '🏆 TOURNAMENT WINNER - Big prizes!', effect: 'cash', value: 800 },
+            { text: '🔄 HARD FORK - New version!', effect: 'all', value: 0.15 },
+            { text: '🚫 BAN THREAT - Country bans crypto!', effect: 'random', value: -0.30 },
+            { text: '🤝 MERGER NEWS - Big combo!', effect: 'all', value: 0.22 },
+            { text: '👻 GHOST TOWN - Nobody trading!', effect: 'all', value: -0.08 },
+            { text: '🎪 CIRCUS DAY - Everything chaotic!', effect: 'all', value: 0.25 },
+            { text: '💣 BOMB THREAT - Sell everything!', effect: 'all', value: -0.35 },
+            { text: '🌈 RAINBOW MOMENT - All green!', effect: 'all', value: 0.18 },
+            { text: '🥇 GOLD STANDARD - Backed by gold!', effect: 'all', value: 0.28 },
+            { text: '🎭 DRAMA QUEEN - Celebrity feud!', effect: 'random', value: 0.15 }
+        ];
+
+        const gameLength_OPTIONS = [30, 45, 60];
+
+        // === MAIN APP ===
+        function App() {
+            const [gameLength, setGameLength] = useState(30);
+            const [day, setDay] = useState(1);
+            const [cash, setCash] = useState(5000);
+            const [holdings, setHoldings] = useState({});
+            const [prices, setPrices] = useState({});
+            const [location, setLocation] = useState(LOCATIONS[0]);
+            const [currentExchange, setCurrentExchange] = useState(EXCHANGES[0]);
+            const [defiDebt, setDefiDebt] = useState(0);
+            const [walletCapacity, setWalletCapacity] = useState(500);
+            const [upgrades, setUpgrades] = useState({}); // { wallet: 2, whaleAlert: 1, ... }
+            const [logs, setLogs] = useState(['Day 1 started']);
+            const [events, setEvents] = useState(['Welcome to Crypto Wars! Tap coins to trade.']);
+            const [gameOver, setGameOver] = useState(false);
+            const [gameStarted, setGameStarted] = useState(false);
+            const [eventEffect, setEventEffect] = useState(null); // 'good', 'bad', 'none'
+            const [modal, setModal] = useState(null); // 'trade', 'travel', 'upgrades', 'defi', 'gameover'
+            const [tradeModal, setTradeModal] = useState(null);
+            const [tradeAmount, setTradeAmount] = useState('0');
+
+            // Initialize prices
+            useEffect(() => {
+                const initialPrices = {};
+                CRYPTOS.forEach(c => initialPrices[c.symbol] = c.price);
+                setPrices(initialPrices);
+            }, []);
+
+            const addLog = (msg) => {
+                setLogs(prev => [msg, ...prev].slice(0, 50));
+            };
+
+            // Save/Load game
+            const saveGame = () => {
+                const gameState = { day, cash, holdings, prices, location, currentExchange, defiDebt, upgrades, walletCapacity, gameLength };
+                localStorage.setItem('cryptoWarsSave', JSON.stringify(gameState));
+                addLog('💾 Game saved!');
+            };
+
+            const loadGame = () => {
+                const saved = localStorage.getItem('cryptoWarsSave');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    setDay(state.day || 1);
+                    setCash(state.cash || 5000);
+                    setHoldings(state.holdings || {});
+                    setPrices(state.prices || {});
+                    setLocation(state.location || LOCATIONS[0]);
+                    setCurrentExchange(state.currentExchange || EXCHANGES[0]);
+                    setDefiDebt(typeof state.defiDebt === 'number' && state.defiDebt > 0 ? state.defiDebt : 5000);
+                    setUpgrades(state.upgrades || {});
+                    setWalletCapacity(state.walletCapacity || 500);
+                    setGameLength(state.gameLength || 30);
+                    setGameStarted(true);
+                    addLog('📂 Game loaded!');
+                }
+            };
+
+            const startGame = (length) => {
+                // Generate historical price data for this game
+                const gameData = generateGameData(length);
+                const startDate = getDateFromDay(gameData.startDay);
+                
+                // Initialize prices from historical data
+                const initialPrices = {};
+                CRYPTOS.forEach(c => {
+                    const priceData = gameData.cryptoPrices[c.symbol];
+                    initialPrices[c.symbol] = priceData ? priceData[0].price : c.price;
+                });
+
+                // Store game data for price lookups
+                window.gameData = gameData;
+                
+                setGameLength(length);
+                setDay(1);
+                setCash(5000);
+                setHoldings({});
+                setPrices(initialPrices);
+                setLocation(LOCATIONS[0]);
+                setCurrentExchange(EXCHANGES[0]);
+                setDefiDebt(5000); // Start with $5000 debt from loan shark
+                setUpgrades({});
+                setWalletCapacity(500);
+                setGameOver(false);
+                setGameStarted(true);
+                setLogs([`📅 Game started: ${startDate}`, 'You owe the loan shark $5000!']);
+                setEvents([`Historical data: ${startDate}`, 'Pay off your debt!']);
+                localStorage.removeItem('cryptoWarsSave');
+            };
+
+            const addEvent = (msg) => {
+                setEvents(prev => [msg, ...prev].slice(0, 5));
+            };
+
+            const advanceDay = () => {
+                if (day >= gameLength) {
+                    setGameOver(true);
+                    setModal('gameover');
+                    return;
+                }
+
+                // Get historical prices for this day
+                const newPrices = { ...prices };
+                const nextDay = day + 1;
+                
+                if (window.gameData && window.gameData.cryptoPrices) {
+                    CRYPTOS.forEach(c => {
+                        const priceData = window.gameData.cryptoPrices[c.symbol];
+                        if (priceData && priceData[day]) {
+                            newPrices[c.symbol] = priceData[day].price;
+                        }
+                    });
+                }
+                setPrices(newPrices);
+
+                // Random event (40% chance now)
+                if (Math.random() < 0.4) {
+                    const event = getRandomEvent() || EVENTS[Math.floor(Math.random() * EVENTS.length)];
+                    addEvent(event.text);
+                    addLog(event.text);
+
+                    // Set animation effect
+                    if (event.value > 0) {
+                        setEventEffect('good');
+                        setTimeout(() => setEventEffect(null), 500);
+                    } else if (event.value < 0) {
+                        setEventEffect('bad');
+                        setTimeout(() => setEventEffect(null), 500);
+                    }
+
+                    if (event.effect === 'all') {
+                        Object.keys(newPrices).forEach(sym => {
+                            const fomoReduction = (upgrades.fomoShield || 0) * 0.1;
+                            const adjustedValue = event.value * (1 - fomoReduction);
+                            newPrices[sym] *= (1 + adjustedValue);
+                        });
+                    } else if (event.effect === 'cash') {
+                        setCash(c => c + event.value);
+                    } else if (event.effect === 'single' && event.target) {
+                        const target = event.target === 'RANDOM' ? CRYPTOS[Math.floor(Math.random() * CRYPTOS.length)].symbol : event.target;
+                        newPrices[target] *= (1 + event.value);
+                    }
+                }
+
+                // HODL Master daily bonus
+                if (upgrades.hodlMaster && upgrades.hodlMaster > 0) {
+                    const hodlBonus = upgrades.hodlMaster * 50;
+                    setCash(c => c + hodlBonus);
+                    addLog(`💎 HODL bonus: +$${hodlBonus}!`);
+                }
+
+                // Loan interest (0.5% daily)
+                if (defiDebt > 0) {
+                    setDefiDebt(d => d * 1.005);
+                    addLog(`💰 DeFi interest: $${(defiDebt * 0.005).toFixed(2)}`);
+                }
+
+                setDay(d => d + 1);
+                addLog(`Day ${day + 1} started`);
+            };
+
+            const handleCryptoClick = (crypto) => {
+                const fee = currentExchange?.fee || 0.006;
+                const basePrice = prices?.[crypto.symbol] || crypto.price || 0;
+                const price = basePrice * (location?.multiplier || 1) * (1 + fee);
+                const cashAvailable = isNaN(cash) ? 0 : cash;
+                const walletSpace = Math.max(0, getWalletCapacity() - getTotalCrypto());
+                const maxBuy = price > 0 ? Math.min(cashAvailable / price, walletSpace) : 0;
+                setTradeModal({ symbol: crypto.symbol, type: 'buy', price, max: maxBuy });
+                setTradeAmount(maxBuy > 0 ? maxBuy.toFixed(6) : '0');
+                setModal('trade');
+            };
+
+            const handleTrade = (amount) => {
+                if (!tradeModal || !amount || amount <= 0) return;
+
+                // Check wallet crypto limit (max 10 different cryptos)
+                if (tradeModal.type === 'buy') {
+                    const currentCryptos = Object.keys(holdings).filter(k => holdings[k] > 0).length;
+                    const alreadyHas = (holdings[tradeModal.symbol] || 0) > 0;
+                    if (!alreadyHas && currentCryptos >= 10) {
+                        addLog(`❌ Wallet limit! Max 10 cryptocurrencies.`);
+                        alert('Wallet Limit Reached!\n\nYou can only hold 10 different cryptocurrencies at once.\n\nSell some to make room for new ones.');
+                        return;
+                    }
+                }
+
+                // Check wallet capacity for buys
+                if (tradeModal.type === 'buy') {
+                    const currentTotal = getTotalCrypto();
+                    if (currentTotal + amount > getWalletCapacity()) {
+                        addLog(`❌ Wallet full! Need space for ${amount.toFixed(4)} more`);
+                        return;
+                    }
+                }
+
+                const price = tradeModal.type === 'buy'
+                    ? prices[tradeModal.symbol] * location.multiplier * (1 + currentExchange.fee)
+                    : prices[tradeModal.symbol] * location.multiplier * (1 - currentExchange.fee);
+
+                if (tradeModal.type === 'buy') {
+                    const cost = amount * price;
+                    if (cost > cash) {
+                        addLog(`❌ Not enough cash! Need $${cost.toFixed(2)}`);
+                        return;
+                    }
+                    setCash(c => c - cost);
+                    setHoldings(h => ({ ...h, [tradeModal.symbol]: (h[tradeModal.symbol] || 0) + amount }));
+                    addLog(`✅ Bought ${amount.toFixed(4)} ${tradeModal.symbol} for $${cost.toFixed(2)}`);
+                } else {
+                    const owned = holdings[tradeModal.symbol] || 0;
+                    if (amount > owned) {
+                        addLog(`❌ Not enough ${tradeModal.symbol}!`);
+                        return;
+                    }
+                    const revenue = amount * price;
+                    setCash(c => c + revenue);
+                    setHoldings(h => ({ ...h, [tradeModal.symbol]: owned - amount }));
+                    addLog(`✅ Sold ${amount.toFixed(4)} ${tradeModal.symbol} for $${revenue.toFixed(2)}`);
+                }
+                setModal(null);
+                setTradeAmount('0');
+            };
+
+            const handleTravel = (loc) => {
+                setLocation(loc);
+                addLog(`✈️ Traveled to ${loc.name} (${loc.multiplier}x)`);
+                setModal(null);
+            };
+
+            const handleBuyUpgrade = (key) => {
+                const upgrade = UPGRADES[key];
+                if (cash < upgrade.cost) {
+                    addLog(`❌ Not enough cash for ${upgrade.name}!`);
+                    return;
+                }
+                setCash(c => c - upgrade.cost);
+                setUpgrades(u => ({ ...u, [key]: (u[key] || 0) + 1 }));
+                addLog(`✅ Bought ${upgrade.name}! ${upgrade.desc}`);
+            };
+
+            const handleDefiBorrow = (amount) => {
+                const collateral = amount * 1.5;
+                if (collateral > cash) {
+                    addLog(`❌ Need $${collateral.toFixed(0)} collateral!`);
+                    return;
+                }
+                setCash(c => c + amount);
+                setDefiDebt(d => d + amount);
+                addLog(`🦈 Took $${amount} DeFi loan! Collateral: $${collateral.toFixed(0)}`);
+                setModal(null);
+            };
+
+            const handleDefiPay = () => {
+                const maxPay = Math.min(cash, defiDebt);
+                if (maxPay <= 0) {
+                    addLog(`❌ No cash to pay debt!`);
+                    return;
+                }
+                setCash(c => c - maxPay);
+                setDefiDebt(d => d - maxPay);
+                addLog(`✅ Paid $${maxPay.toFixed(2)} of debt!`);
+                setModal(null);
+            };
+
+            const getNetWorth = () => {
+                let cryptoValue = 0;
+                Object.entries(holdings).forEach(([sym, amt]) => {
+                    cryptoValue += amt * (prices[sym] || 0) * location.multiplier * (1 + currentExchange.fee);
+                });
+                return cash + cryptoValue - defiDebt;
+            };
+
+            const getTotalCrypto = () => {
+                return Object.values(holdings).reduce((sum, qty) => sum + qty, 0);
+            };
+
+            const getWalletCapacity = () => {
+                const walletUpgrades = upgrades.wallet || 0;
+                return walletCapacity + (walletUpgrades * 500);
+            };
+
+            const getWalletProgress = () => {
+                const total = getTotalCrypto();
+                const max = getWalletCapacity();
+                return Math.min((total / max) * 100, 100);
+            };
+
+            // Render
+            // Start Screen
+            if (!gameStarted) {
+                return h('div', { className: 'min-h-screen flex items-center justify-center', style: { background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%)' } },
+                    h('div', { style: { textAlign: 'center', padding: '40px' } },
+                        h('h1', { style: { fontSize: '48px', fontWeight: 'bold', color: '#ff6b35', marginBottom: '10px', textShadow: '0 0 20px rgba(255,107,53,0.6)' } }, 'CRYPTO WARS'),
+                        h('p', { style: { color: '#aaa', marginBottom: '30px', fontSize: '18px' } }, '🔥 Molten Edition 🔥'),
+
+                        localStorage.getItem('cryptoWarsSave') ?
+                            h('button', {
+                                onClick: loadGame,
+                                style: { padding: '15px 40px', fontSize: '18px', background: 'linear-gradient(135deg, #00b894, #00a884)', border: 'none', borderRadius: '12px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', marginBottom: '15px', display: 'block', width: '100%' }
+                            }, '📂 CONTINUE') : null,
+
+                        h('div', { style: { color: '#fff', fontSize: '20px', marginBottom: '15px' } }, 'Select Game Length:'),
+                        GAME_DAYS_OPTIONS.map(len =>
+                            h('button', {
+                                key: len,
+                                onClick: () => startGame(len),
+                                style: { padding: '15px 30px', fontSize: '16px', background: 'linear-gradient(135deg, #ff6b35, #ff8c42)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', margin: '5px' }
+                            }, `🔥 ${len} DAYS`)
+                        ),
+
+                        h('div', { style: { marginTop: '30px', color: '#666', fontSize: '14px' } },
+                            'Tap coins to trade • Events happen daily • Survive to the end!'
+                        )
+                    )
+                );
+            }
+
+            return h('div', { className: 'min-h-screen relative' },
+                // Orange top bar
+                h('div', { style: { position: 'absolute', top: 0, left: 0, right: 0, height: '10px', background: 'linear-gradient(90deg, #ff6b35, #ff8c42)', zIndex: 100 } }),
+                // Header
+                h('div', { className: 'header' },
+                    h('div', null,
+                        h('div', { className: 'text-lg font-bold text-neon-orange' }, 'CRYPTO WARS'),
+                        h('div', { className: 'text-sm text-gray-400' }, `${currentExchange.name} • ${location.name}`)
+                    ),
+                    h('div', { className: 'ml-auto', style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+                        h('div', { className: 'progress-ring', style: { '--progress': (day/gameLength*100) + '%' } },
+                            h('div', { className: 'progress-inner text-white' }, `${day}/${gameLength}`)
+                        ),
+                        h('div', { className: 'text-right' },
+                            h('div', { className: 'text-lg font-bold text-green-400' }, `$${isNaN(cash) ? 0 : cash.toFixed(0)}`),
+                            h('div', { className: 'text-xs text-gray-500' }, 'cash')
+                        )
+                    )
+                ),
+
+                // Crypto Grid
+                h('div', {
+                    className: 'crypto-area ' + (eventEffect === 'good' ? 'event-flash-green' : eventEffect === 'bad' ? 'event-flash-red' : ''),
+                    style: eventEffect ? { transition: 'all 0.3s' } : {}
+                },
+                    h('div', { className: 'crypto-grid' },
+                        CRYPTOS.map(crypto => {
+                            const price = (prices[crypto.symbol] || crypto.price) * location.multiplier * (1 + currentExchange.fee);
+                            const change = ((price - crypto.price) / crypto.price * 100).toFixed(1);
+                            return h('div', { key: crypto.symbol, className: 'crypto-card', onClick: () => handleCryptoClick(crypto) },
+                                h('div', { className: 'coin-icon', style: { background: crypto.color, color: '#fff' } }, crypto.icon),
+                                h('div', { className: 'coin-symbol text-white' }, crypto.symbol),
+                                h('div', { className: 'coin-price text-white' }, '$' + (price < 1 ? price.toFixed(3) : price.toFixed(0))),
+                                h('div', { className: 'coin-change ' + (change >= 0 ? 'price-up' : 'price-down') }, (change >= 0 ? '+' : '') + change + '%')
+                            );
+                        })
+                    )
+                ),
+
+                // Story / Events
+                h('div', { className: 'event-area' },
+                    h('div', { className: 'event-title' }, 'THE STORY'),
+                    events.map((e, i) => h('div', { key: i, className: 'event-text' }, e))
+                ),
+
+                // 8-bit Terminal
+                h('div', { className: 'bit-terminal' },
+                    h('div', { className: 'bit-title' }, 'LOG'),
+                    logs.slice(0, 8).map((log, i) => h('div', { key: i, className: 'bit-log-line' }, log)),
+
+                    // Wallet inside log
+                    h('div', { className: 'wallet-in-log' },
+                        h('div', { className: 'wallet-in-log-title' },
+                            h('span', null, 'WALLET'),
+                            h('span', null, `${getTotalCrypto()}/${getWalletCapacity()}`)
+                        ),
+                        h('div', { className: 'wallet-in-log-bar' },
+                            h('div', { className: 'wallet-in-log-bar-fill', style: { width: getWalletProgress() + '%' } })
+                        ),
+                        h('div', { className: 'wallet-in-log-coins' },
+                            Object.entries(holdings).filter(([_, amt]) => amt > 0).slice(0, 8).map(([sym, amt]) => {
+                                const crypto = CRYPTOS.find(c => c.symbol === sym);
+                                const color = crypto?.color || '#fff';
+                                return h('span', {
+                                    key: sym,
+                                    className: 'wallet-in-log-coin',
+                                    style: { background: color, color: '#000', cursor: 'pointer' },
+                                    onClick: () => {
+                                        const fee = currentExchange?.fee || 0.006;
+                                        const basePrice = prices?.[sym] || crypto?.price || 0;
+                                        const price = basePrice * (location?.multiplier || 1) * (1 - fee);
+                                        setTradeModal({ symbol: sym, type: 'sell', price, max: amt });
+                                        setTradeAmount(amt.toFixed(6));
+                                        setModal('trade');
+                                    }
+                                }, `${amt.toFixed(0)}${sym}`);
+                            })
+                        )
+                    ),
+
+                    h('div', { className: 'bit-stats' },
+                        h('div', { style: { color: '#00ff88' } }, `CASH: $${isNaN(cash) ? 0 : cash.toFixed(0)}`),
+                        h('div', { style: { color: defiDebt > 0 ? '#ff4488' : '#666' } }, defiDebt > 0 ? `DEBT: $${defiDebt.toFixed(0)}` : 'DEBT: $0')
+                    )
+                ),
+
+                // Bottom Toolbar
+                h('div', { className: 'bottom-toolbar' },
+                    h('div', { className: 'toolbar-btn', style: { background: '#333' }, onClick: saveGame }, 'SAVE'),
+                    h('div', { className: 'toolbar-btn btn-travel', onClick: () => setModal('travel') }, 'TRAVEL'),
+                    h('div', { className: 'toolbar-btn btn-upgrades', onClick: () => setModal('upgrades') }, 'UPGRADES'),
+                    h('div', { className: 'toolbar-btn btn-day', onClick: advanceDay }, 'DAY'),
+                    h('div', { className: 'toolbar-btn btn-defi', onClick: () => setModal('defi') }, 'DEFI'),
+                    h('div', { className: 'toolbar-btn btn-exchange', onClick: () => setModal('exchange') }, 'EXCHANGE')
+                ),
+
+                // Trade Modal
+                modal === 'trade' && tradeModal && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
+                    h('div', {
+                        className: 'modal-content',
+                        style: {
+                            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                            border: `2px solid ${tradeModal.type === 'buy' ? '#00ff88' : '#ff0080'}`
+                        },
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' } },
+                            h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px' } },
+                                h('span', { style: { fontSize: '32px' }, }, CRYPTOS.find(c => c.symbol === tradeModal.symbol).icon),
+                                h('div', null,
+                                    h('h2', { style: { fontSize: '24px', fontWeight: 'bold' } }, tradeModal.symbol),
+                                    h('p', { style: { fontSize: '14px', color: '#aaa' } }, '$' + tradeModal.price.toFixed(2))
+                                )
+                            ),
+                            h('button', { onClick: () => setModal(null), style: { fontSize: '24px', background: 'none', border: 'none', color: '#666', cursor: 'pointer' } }, '×')
+                        ),
+
+                        // BUY/SELL toggle
+                        (holdings[tradeModal.symbol] || 0) > 0 ?
+                            h('div', { style: { display: 'flex', gap: '8px', marginBottom: '16px' } },
+                                h('button', {
+                                    onClick: () => {
+                                        const fee = currentExchange.fee;
+                                        const price = prices[tradeModal.symbol] * location.multiplier * (1 + fee);
+                                        setTradeModal({...tradeModal, type: 'buy', price, max: Math.max(0, Math.min((cash||0) / price, getWalletCapacity() - getTotalCrypto()))});
+                                        setTradeAmount((cash / price).toFixed(6));
+                                    },
+                                    style: {
+                                        flex: 1,
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        background: tradeModal.type === 'buy' ? '#00ff88' : '#333',
+                                        color: tradeModal.type === 'buy' ? '#000' : '#fff',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }
+                                }, 'BUY'),
+                                h('button', {
+                                    onClick: () => {
+                                        const fee = currentExchange.fee;
+                                        const price = prices[tradeModal.symbol] * location.multiplier * (1 - fee);
+                                        const owned = holdings[tradeModal.symbol];
+                                        setTradeModal({...tradeModal, type: 'sell', price, max: owned || 0});
+                                        setTradeAmount(owned.toFixed(6));
+                                    },
+                                    style: {
+                                        flex: 1,
+                                        padding: '12px',
+                                        borderRadius: '8px',
+                                        background: tradeModal.type === 'sell' ? '#ff0080' : '#333',
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }
+                                }, 'SELL')
+                            ) : null,
+
+                        h('div', { style: { background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px', marginBottom: '12px' } },
+                            h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '14px' } },
+                                h('span', { style: { color: '#aaa' } }, 'Fee:'),
+                                h('span', { style: { color: '#ff6b35' } }, (currentExchange.fee * 100).toFixed(1) + '%')
+                            ),
+                            (holdings[tradeModal.symbol] || 0) > 0 && h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '4px' } },
+                                h('span', { style: { color: '#aaa' } }, 'Owned:'),
+                                h('span', { style: { color: '#fff' } }, (holdings[tradeModal.symbol] || 0).toFixed(4))
+                            )
+                        ),
+                        h('input', {
+                            type: 'number',
+                            value: tradeAmount,
+                            onChange: (e) => setTradeAmount(e.target.value),
+                            style: {
+                                width: '100%',
+                                padding: '16px',
+                                background: 'rgba(0,0,0,0.5)',
+                                border: '2px solid #333',
+                                borderRadius: '12px',
+                                color: '#fff',
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                marginBottom: '12px'
+                            },
+                            placeholder: '0.00',
+                            step: 'any'
+                        }),
+                        h('div', { style: { display: 'flex', gap: '8px', marginBottom: '16px' } },
+                            h('button', {
+                                onClick: () => setTradeAmount(tradeModal.max.toFixed(6)),
+                                style: { flex: 1, padding: '10px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, 'MAX'),
+                            h('button', {
+                                onClick: () => setTradeAmount((tradeModal.max * 0.5).toFixed(6)),
+                                style: { flex: 1, padding: '10px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '50%'),
+                            h('button', {
+                                onClick: () => setTradeAmount((tradeModal.max * 0.25).toFixed(6)),
+                                style: { flex: 1, padding: '10px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '25%')
+                        ),
+                        h('div', { style: { background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px', marginBottom: '16px' } },
+                            h('div', { style: { display: 'flex', justifyContent: 'space-between' } },
+                                h('span', { style: { color: '#aaa' } }, 'Total:'),
+                                h('span', { style: { fontSize: '20px', fontWeight: 'bold', color: tradeModal.type === 'buy' ? '#ff0080' : '#00ff88' } },
+                                    '$' + (parseFloat(tradeAmount || 0) * tradeModal.price).toFixed(2)
+                                )
+                            )
+                        ),
+                        h('button', {
+                            onClick: () => handleTrade(parseFloat(tradeAmount)),
+                            style: {
+                                width: '100%',
+                                padding: '16px',
+                                background: tradeModal.type === 'buy' ? 'linear-gradient(135deg, #00ff88, #00cc66)' : 'linear-gradient(135deg, #ff0080, #cc0066)',
+                                border: 'none',
+                                borderRadius: '12px',
+                                color: '#000',
+                                fontSize: '18px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }
+                        }, tradeModal.type === 'buy' ? '🚀 BUY ' + tradeModal.symbol : '💰 SELL ' + tradeModal.symbol)
+                    )
+                ),
+
+                // Travel Modal
+                modal === 'travel' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
+                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation() },
+                        h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
+                        h('div', { className: 'modal-title' }, '✈️ TRAVEL TO...'),
+                        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' } },
+                            LOCATIONS.map(loc =>
+                                h('div', {
+                                    key: loc.name,
+                                    onClick: () => handleTravel(loc),
+                                    style: {
+                                        padding: '15px',
+                                        background: location.name === loc.name ? '#ff6b35' : '#1a1a2e',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        textAlign: 'center'
+                                    }
+                                },
+                                    h('div', { style: { fontWeight: 'bold' } }, loc.name),
+                                    h('div', { style: { fontSize: '12px', color: location.name === loc.name ? '#fff' : '#aaa' } },
+                                        loc.multiplier + 'x multiplier'
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+
+                // Upgrades Modal
+                modal === 'upgrades' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
+                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation(), style: { maxHeight: '80vh', overflow: 'auto' } },
+                        h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
+                        h('div', { className: 'modal-title' }, '⚡ UPGRADES'),
+                        Object.entries(UPGRADES).map(([key, upg]) =>
+                            h('div', {
+                                key: key,
+                                style: {
+                                    padding: '12px',
+                                    background: (upgrades[key] || 0) > 0 ? '#00ff8833' : '#1a1a2e',
+                                    borderRadius: '8px',
+                                    marginBottom: '8px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }
+                            },
+                                h('div', null,
+                                    h('div', { style: { fontWeight: 'bold' } }, upg.name + (upgrades[key] ? ` (x${upgrades[key]})` : '')),
+                                    h('div', { style: { fontSize: '12px', color: '#aaa' } }, upg.desc)
+                                ),
+                                h('button', {
+                                    onClick: () => handleBuyUpgrade(key),
+                                    style: {
+                                        padding: '8px 16px',
+                                        background: cash >= upg.cost ? '#ff6b35' : '#333',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        color: '#fff',
+                                        cursor: cash >= upg.cost ? 'pointer' : 'not-allowed'
+                                    }
+                                }, `$${upg.cost}`)
+                            )
+                        )
+                    )
+                ),
+
+                // Defi Modal
+                modal === 'defi' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
+                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation() },
+                        h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
+                        h('div', { className: 'modal-title' }, '🦈 DEFI LOAN SHARK'),
+                        h('div', { style: { textAlign: 'center', marginBottom: '15px' } },
+                            h('div', { style: { fontSize: '14px', color: '#aaa' } }, 'Current Debt'),
+                            h('div', { style: { fontSize: '28px', color: '#ff4488', fontWeight: 'bold' } }, `$${defiDebt.toFixed(2)}`),
+                            h('div', { style: { fontSize: '12px', color: '#666' } }, '0.5% daily • 150% collateral')
+                        ),
+                        h('div', { style: { marginBottom: '15px' } },
+                            h('div', { style: { fontSize: '12px', color: '#aaa', marginBottom: '6px' } }, 'Borrow Amount:'),
+                            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' } },
+                                h('button', {
+                                    onClick: () => handleDefiBorrow(Math.floor(cash * 0.25)),
+                                    style: { padding: '10px', background: cash * 0.25 * 1.5 <= cash ? '#fd79a8' : '#333', border: 'none', borderRadius: '6px', color: '#fff', cursor: cash * 0.25 * 1.5 <= cash ? 'pointer' : 'not-allowed' }
+                                }, `$${Math.floor(cash * 0.25)}`),
+                                h('button', {
+                                    onClick: () => handleDefiBorrow(Math.floor(cash * 0.5)),
+                                    style: { padding: '10px', background: cash * 0.5 * 1.5 <= cash ? '#fd79a8' : '#333', border: 'none', borderRadius: '6px', color: '#fff', cursor: cash * 0.5 * 1.5 <= cash ? 'pointer' : 'not-allowed' }
+                                }, `$${Math.floor(cash * 0.5)}`),
+                                h('button', {
+                                    onClick: () => handleDefiBorrow(Math.floor(cash * 0.75)),
+                                    style: { padding: '10px', background: cash * 0.75 * 1.5 <= cash ? '#fd79a8' : '#333', border: 'none', borderRadius: '6px', color: '#fff', cursor: cash * 0.75 * 1.5 <= cash ? 'pointer' : 'not-allowed' }
+                                }, `$${Math.floor(cash * 0.75)}`)
+                            ),
+                            h('div', { style: { fontSize: '10px', color: '#666', marginTop: '4px', textAlign: 'center' } }, `Max: $${Math.floor(cash / 1.5)} (needs 150% collateral)`)
+                        ),
+                        h('div', { style: { display: 'flex', gap: '10px' } },
+                            h('button', {
+                                onClick: handleDefiPay,
+                                style: { flex: 1, padding: '12px', background: defiDebt > 0 ? '#00ff88' : '#333', border: 'none', borderRadius: '8px', color: defiDebt > 0 ? '#000' : '#666', fontWeight: 'bold', cursor: defiDebt > 0 ? 'pointer' : 'not-allowed' }
+                            }, '💰 PAY OFF')
+                        )
+                    )
+                ),
+
+                // Exchange Modal
+                modal === 'exchange' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
+                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation(), style: { maxHeight: '80vh', overflow: 'auto' } },
+                        h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
+                        h('div', { className: 'modal-title' }, '💱 SELECT EXCHANGE'),
+                        h('div', { style: { textAlign: 'center', marginBottom: '15px', color: '#aaa', fontSize: '14px' } },
+                            `Current: ${currentExchange.name} (${currentExchange.fee * 100}% fee)`
+                        ),
+                        EXCHANGES.map(ex =>
+                            h('div', {
+                                key: ex.name,
+                                onClick: () => { setCurrentExchange(ex); addLog(`Switched to ${ex.name}`); setModal(null); },
+                                style: {
+                                    padding: '12px',
+                                    background: currentExchange.name === ex.name ? '#ff6b35' : '#1a1a2e',
+                                    borderRadius: '8px',
+                                    marginBottom: '8px',
+                                    cursor: 'pointer'
+                                }
+                            },
+                                h('div', { style: { fontWeight: 'bold', color: ex.color } }, ex.name),
+                                h('div', { style: { fontSize: '12px', color: '#aaa' } }, `${ex.fee * 100}% fee • ${ex.description}`)
+                            )
+                        )
+                    )
+                ),
+
+                // Game Over Modal
+                modal === 'gameover' && h('div', { className: 'modal-overlay' },
+                    h('div', { className: 'modal-content game-over', style: { maxWidth: '360px', textAlign: 'center' } },
+                        h('h1', { style: { fontSize: '36px', color: '#ff6b35', marginBottom: '20px', textShadow: '0 0 20px rgba(255,107,53,0.6)' } }, '🔥 GAME OVER 🔥'),
+
+                        h('div', { style: { background: '#1a1a2e', borderRadius: '12px', padding: '20px', marginBottom: '20px' } },
+                            h('div', { style: { fontSize: '16px', color: '#aaa', marginBottom: '5px' } }, 'Days Survived'),
+                            h('div', { style: { fontSize: '32px', fontWeight: 'bold', color: '#fff' } }, `${day} / ${gameLength}`),
+
+                            h('div', { style: { marginTop: '15px', fontSize: '16px', color: '#aaa' } }, 'Final Net Worth'),
+                            h('div', { style: { fontSize: '36px', fontWeight: 'bold', color: getNetWorth() >= 0 ? '#00ff88' : '#ff4488' } },
+                                `$${getNetWorth().toFixed(2)}`
+                            ),
+
+                            h('div', { style: { marginTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '14px' } },
+                                h('div', null, h('span', { style: { color: '#aaa' } }, 'Cash:'), h('span', { style: { color: '#00ff88' } }, ` $${cash.toFixed(0)}`)),
+                                h('div', null, h('span', { style: { color: '#aaa' } }, 'Debt:'), h('span', { style: { color: '#ff4488' } }, ` $${defiDebt.toFixed(0)}`))
+                            ),
+
+                            h('div', { style: { marginTop: '10px', fontSize: '14px', color: '#aaa' } },
+                                'Coins: ' + Object.values(holdings).reduce((a,b) => a+b, 0).toFixed(1)
+                            )
+                        ),
+
+                        h('div', { style: { display: 'flex', gap: '10px' } },
+                            h('button', {
+                                onClick: () => { setModal(null); setGameStarted(false); },
+                                style: { flex: 1, padding: '14px', background: '#333', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '🏠 MENU'),
+                            h('button', {
+                                onClick: () => startGame(gameLength),
+                                style: { flex: 1, padding: '14px', background: 'linear-gradient(135deg, #ff6b35, #ff8c42)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '🔄 RETRY')
+                        ),
+
+                        h('div', { style: { marginTop: '15px', display: 'flex', gap: '10px' } },
+                            h('button', {
+                                onClick: () => startGame(30),
+                                style: { flex: 1, padding: '10px', background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', color: '#aaa', fontSize: '12px', cursor: 'pointer' }
+                            }, '30 DAYS'),
+                            h('button', {
+                                onClick: () => startGame(45),
+                                style: { flex: 1, padding: '10px', background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', color: '#aaa', fontSize: '12px', cursor: 'pointer' }
+                            }, '45 DAYS'),
+                            h('button', {
+                                onClick: () => startGame(60),
+                                style: { flex: 1, padding: '10px', background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', color: '#aaa', fontSize: '12px', cursor: 'pointer' }
+                            }, '60 DAYS')
+                        )
+                    )
+                )
+            );
+        }
+
+        // Render
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(h(App));
+    </script>
+</body>
+</html>
