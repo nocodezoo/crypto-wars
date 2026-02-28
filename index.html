@@ -748,43 +748,44 @@
                                 const owned = portfolio[symbol] || 0;
                                 const value = owned * price;
                                 
-                                return h('div', { key: symbol, className: 'crypto-btn', onClick: () => buy(symbol) },
-                                    h('div', { className: 'flex justify-between items-center mb-1' },
-                                        h('div', { className: 'flex items-center gap-2' },
-                                            h('span', { className: 'text-lg', style: { color: info.color } }, info.icon),
-                                            h('span', { className: 'font-bold text-xs' }, symbol)
-                                        ),
-                                        h('span', { className: `text-xs font-bold ${change >= 0 ? 'price-up' : 'price-down'}` }, 
-                                            `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
-                                        )
+                                return h('div', { key: symbol, className: 'crypto-btn flex items-center justify-between py-1 px-2', onClick: () => buy(symbol) },
+                                    h('div', { className: 'flex items-center gap-1' },
+                                        h('span', { className: 'text-sm', style: { color: info.color } }, info.icon),
+                                        h('span', { className: 'font-bold text-xs' }, symbol)
                                     ),
-                                    h('p', { className: 'text-xs font-bold mono' }, '$' + price.toFixed(price < 1 ? 4 : 0)),
-                                    owned > 0 && h('p', { className: 'text-xs', style: { color: 'var(--text-muted)' } }, 
-                                        owned.toFixed(4) + ' = $' + value.toFixed(0)
+                                    h('span', { className: 'text-xs font-bold mono' }, '$' + (price < 1 ? price.toFixed(4) : price.toFixed(0))),
+                                    h('span', { className: `text-xs font-bold ${change >= 0 ? 'price-up' : 'price-down'}` }, 
+                                        `${change >= 0 ? '+' : ''}${change.toFixed(0)}%`
                                     )
                                 );
                             })
                         )
                     ),
                     
-                    // ACTIONS
-                    h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-2 mb-5' },
+                    // ACTIONS - compact row
+                    h('div', { className: 'flex gap-1 mb-2' },
                         h('button', { 
                             onClick: nextDay,
-                            className: 'py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl lava-glow pulsing'
-                        }, '⏭ Next Day'),
+                            className: 'flex-1 py-1 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded'
+                        }, '⏭ DAY'),
                         h('button', { 
                             onClick: payDebt,
-                            className: 'py-3 bg-blue-600 text-white font-bold rounded-xl'
-                        }, '💳 Pay Debt'),
-                        h('button', { 
-                            onClick: buyAll,
-                            className: 'py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-500'
-                        }, '🤑 Buy All'),
+                            className: 'flex-1 py-1 text-xs bg-blue-600 text-white font-bold rounded'
+                        }, '💳 DEBT'),
                         defiDebt > 0 ? 
                             h('button', { 
                                 onClick: payDefiDebt,
-                                className: 'py-3 bg-purple-600 text-white font-bold rounded-xl'
+                                className: 'flex-1 py-1 text-xs bg-purple-600 text-white font-bold rounded'
+                            }, '🦈 PAY') :
+                            h('button', { 
+                                onClick: getDefiLoan,
+                                className: 'flex-1 py-1 text-xs bg-purple-600 text-white font-bold rounded'
+                            }, '🦈 LOAN'),
+                        h('button', { 
+                            onClick: buyAll,
+                            className: 'flex-1 py-1 text-xs bg-green-600 text-white font-bold rounded'
+                        }, '🤑 ALL')
+                    ),
                             }, '🦈 Pay DeFi') :
                             h('button', { 
                                 onClick: getDefiLoan,
@@ -823,13 +824,11 @@
                         )
                     ),
                     
-                    // LOG
-                    h('div', { className: 'card' },
-                        h('h3', { className: 'font-bold mb-2' }, '📜 Activity'),
-                        h('div', { className: 'space-y-1 max-h-40 overflow-y-auto' },
-                            log.map((msg, i) => 
-                                h('p', { key: i, className: 'text-sm mono', style: { color: i === 0 ? 'var(--text)' : 'var(--text-muted)' } }, msg)
-                            )
+                    // LOG - visible without scroll
+                    h('div', { className: 'text-xs mb-2' },
+                        h('span', { className: 'font-bold text-green-400' }, 'LOG: '),
+                        log.slice(0, 3).map((msg, i) => 
+                            h('span', { key: i, className: 'mr-2', style: { color: i === 0 ? '#00ff00' : '#888' } }, '>' + msg.substring(0, 20))
                         )
                     ),
                     
