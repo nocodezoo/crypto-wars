@@ -127,6 +127,7 @@
 <body>
     <div id="root"></div>
 
+    <script src="events.js"></script>
     <script>
         const { useState, useEffect, useRef } = React;
         const h = React.createElement;
@@ -179,7 +180,7 @@
             insider: { name: 'Insider', desc: 'Price boost', cost: 2000, effect: 'insider', value: 0.05 }
         };
 
-        const EVENTS = [
+        const EVENTS = GAME_EVENTS || [
             { text: '🐋 WHALE DUMP - A whale sells everything!', effect: 'all', value: -0.30 },
             { text: '🚀 BULL RUN - To the moon!', effect: 'all', value: 0.40 },
             { text: '📢 ELON TWEETS - Elon tweets about crypto!', effect: 'random', value: 0.25 },
