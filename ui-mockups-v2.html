@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Wars - UI Mockups V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%); font-family: system-ui, -apple-system, sans-serif; }
+        .mockup { background: #1e1e2e; border-radius: 40px; padding: 16px; height: 650px; overflow: hidden; position: relative; border: 3px solid #ff6b35; }
+        .screen { background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%); height: 100%; border-radius: 28px; overflow: hidden; position: relative; }
+        
+        /* Bright Crypto Cards */
+        .coin-card { display: flex; align-items: center; padding: 10px 14px; margin: 3px 6px; border-radius: 14px; background: linear-gradient(135deg, #2a2a3e 0%, #1e1e2e 100%); border: 1px solid #3a3a4e; }
+        .coin-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        .coin-info { flex: 1; }
+        .coin-symbol { font-weight: 800; font-size: 14px; letter-spacing: 0.5px; }
+        .coin-name { font-size: 10px; color: #9a9aaa; }
+        .coin-price { text-align: right; }
+        .coin-value { font-weight: 700; font-size: 14px; }
+        .coin-change { font-size: 12px; font-weight: 600; }
+        .price-up { color: #00ff88; text-shadow: 0 0 10px rgba(0,255,136,0.5); }
+        .price-down { color: #ff4488; text-shadow: 0 0 10px rgba(255,68,136,0.5); }
+        
+        /* 8-BIT TERMINAL - BRIGHT GREEN */
+        .bit-terminal { position: absolute; right: 0; top: 0; bottom: 0; width: 95px; background: #001a00; border-left: 3px solid #00ff00; padding: 8px; font-family: 'Courier New', monospace; font-size: 9px; color: #00ff00; overflow-y: auto; box-shadow: -4px 0 20px rgba(0,255,0,0.2); }
+        .bit-title { text-align: center; border-bottom: 2px solid #00ff00; padding-bottom: 4px; margin-bottom: 6px; text-shadow: 0 0 10px #00ff00; font-weight: bold; letter-spacing: 1px; }
+        .bit-log-line { margin-bottom: 8px; line-height: 1.4; white-space: normal; word-wrap: break-word; }
+        .bit-stats { position: absolute; bottom: 8px; left: 8px; right: 8px; border-top: 2px solid #00ff00; padding-top: 6px; font-size: 8px; }
+        
+        /* Bottom Nav - Bright */
+        .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 10px 4px; background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 100%); border-top: 2px solid #ff6b35; }
+        
+        /* Stats Bar - Bright */
+        .stats-bar { display: flex; gap: 6px; padding: 10px 12px; overflow-x: auto; background: linear-gradient(90deg, #ff6b35 0%, #ff8c42 100%); }
+        .stat-pill { background: rgba(255,255,255,0.25); padding: 5px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; color: #000; backdrop-filter: blur(4px); }
+        
+        /* Action Row - Bright */
+        .action-row { display: flex; gap: 6px; padding: 8px 12px; }
+        .action-btn { flex: 1; padding: 12px 6px; border-radius: 12px; font-weight: 800; font-size: 11px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+        
+        /* Progress Ring */
+        .progress-ring { width: 52px; height: 52px; border-radius: 50%; background: conic-gradient(#ff6b35 var(--progress), #333 var(--progress)); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,107,53,0.4); }
+        .progress-inner { width: 42px; height: 42px; background: linear-gradient(135deg, #1a1a2e 0%, #12121a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+        
+        /* Bright color scheme */
+        .bg-neon-orange { background: linear-gradient(135deg, #ff6b35, #ff8c42); }
+        .text-neon-orange { color: #ff6b35; text-shadow: 0 0 15px rgba(255,107,53,0.6); }
+        .bg-neon-green { background: linear-gradient(135deg, #00ff88, #00cc66); }
+        .bg-neon-pink { background: linear-gradient(135deg, #ff4488, #ff0066); }
+        .bg-neon-blue { background: linear-gradient(135deg, #4488ff, #0066ff); }
+        .bg-neon-purple { background: linear-gradient(135deg, #aa44ff, #8800ff); }
+    </style>
+</head>
+<body class="p-6">
+    <h1 class="text-3xl font-bold text-white mb-2">Crypto Wars - UI Mockups V2</h1>
+    <p class="text-gray-400 mb-6">Brighter colors, 8-bit green terminal, full log text</p>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+        
+        <!-- VARIATION 1: Bright Modern -->
+        <div>
+            <h2 class="text-lg font-bold text-orange-400 mb-3">V1: Bright Modern</h2>
+            <div class="mockup">
+                <div class="screen">
+                    <!-- Header with Progress -->
+                    <div class="p-3 flex items-center gap-3">
+                        <div class="progress-ring" style="--progress: 17%">
+                            <div class="progress-inner text-white">5/30</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-lg font-bold text-neon-orange">CRYPTO WARS</div>
+                            <div class="text-[10px] text-gray-400">Tap coin to trade</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-bold text-green-400">$5,000</div>
+                            <div class="text-[9px] text-gray-400">cash</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-row">
+                        <button class="action-btn bg-neon-orange text-white">⏭ DAY</button>
+                        <button class="action-btn bg-neon-blue text-white">💳 DEBT</button>
+                        <button class="action-btn bg-neon-purple text-white">🦈 LOAN</button>
+                        <button class="action-btn bg-neon-green text-black">🤑 ALL</button>
+                    </div>
+                    
+                    <!-- Crypto List -->
+                    <div class="overflow-y-auto" style="height: 340px;">
+                        <div class="coin-card"><div class="coin-icon" style="background: linear-gradient(135deg, #f7931a, #ffb840)">₿</div><div class="coin-info"><div class="coin-symbol text-white">BTC</div><div class="coin-name">Bitcoin</div></div><div class="coin-price"><div class="coin-value text-white">$42,000</div><div class="coin-change price-up">+2.5%</div></div></div>
+                        <div class="coin-card"><div class="coin-icon" style="background: linear-gradient(135deg, #627eea, #88a4ff)">Ξ</div><div class="coin-info"><div class="coin-symbol text-white">ETH</div><div class="coin-name">Ethereum</div></div><div class="coin-price"><div class="coin-value text-white">$2,500</div><div class="coin-change price-down">-1.2%</div></div></div>
+                        <div class="coin-card"><div class="coin-icon" style="background: linear-gradient(135deg, #00ffa3, #00cc88)">◎</div><div class="coin-info"><div class="coin-symbol text-white">SOL</div><div class="coin-name">Solana</div></div><div class="coin-price"><div class="coin-value text-white">$95</div><div class="coin-change price-up">+5.8%</div></div></div>
+                        <div class="coin-card"><div class="coin-icon" style="background: linear-gradient(135deg, #c2a633, #ddc044)">Ð</div><div class="coin-info"><div class="coin-symbol text-white">DOGE</div><div class="coin-name">Dogecoin</div></div><div class="coin-price"><div class="coin-value text-white">$0.08</div><div class="coin-change price-up">+12%</div></div></div>
+                        <div class="coin-card"><div class="coin-icon" style="background: linear-gradient(135deg, #375bd2, #5588ff)">⬡</div><div class="coin-info"><div class="coin-symbol text-white">LINK</div><div class="coin-name">Chainlink</div></div><div class="coin-price"><div class="coin-value text-white">$15</div><div class="coin-change price-up">+0.5%</div></div></div>
+                    </div>
+                    
+                    <!-- 8-BIT TERMINAL -->
+                    <div class="bit-terminal">
+                        <div class="bit-title">◄ CRYPTO LOG ►</div>
+                        <div class="bit-log-line" style="color:#00ff00">> Day 5 started</div>
+                        <div class="bit-log-line" style="color:#00dd00">> BTC +2.5% moon!</div>
+                        <div class="bit-log-line" style="color:#00bb00">> ETH slight dip</div>
+                        <div class="bit-log-line" style="color:#009900">> SOL pumping +5%</div>
+                        <div class="bit-log-line" style="color:#007700">> whale entered</div>
+                        <div class="bit-stats">
+                            <div>D:5 C:$5K</div>
+                            <div>D:$50K N:-$45K</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Bottom Nav -->
+                    <div class="bottom-nav">
+                        <div class="text-center"><span class="text-lg">🌴</span></div>
+                        <div class="text-center"><span class="text-lg">⚡</span></div>
+                        <div class="text-center"><span class="text-xl">⏭️</span></div>
+                        <div class="text-center"><span class="text-lg">💱</span></div>
+                        <div class="text-center"><span class="text-lg">💼</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VARIATION 2: Color Pop -->
+        <div>
+            <h2 class="text-lg font-bold text-green-400 mb-3">V2: Color Pop</h2>
+            <div class="mockup">
+                <div class="screen">
+                    <!-- Bright Stats Bar -->
+                    <div class="stats-bar">
+                        <span class="stat-pill">Day 5/30</span>
+                        <span class="stat-pill">💰$5K</span>
+                        <span class="stat-pill">📈+$500</span>
+                        <span class="stat-pill">📉-$50K</span>
+                    </div>
+                    
+                    <!-- Action Row -->
+                    <div class="action-row">
+                        <button class="action-btn bg-neon-orange text-white">⏭ DAY</button>
+                        <button class="action-btn bg-neon-blue text-white">DEBT</button>
+                        <button class="action-btn bg-neon-purple text-white">LOAN</button>
+                        <button class="action-btn bg-neon-green text-black">ALL</button>
+                    </div>
+                    
+                    <!-- Crypto Grid -->
+                    <div class="grid grid-cols-2 gap-1 p-1 overflow-y-auto" style="height: 360px;">
+                        <div class="bg-gray-800 rounded-lg p-2 text-center border-2 border-gray-700"><div class="text-2xl mb-1">₿</div><div class="font-bold text-white">BTC</div><div class="text-sm text-white">$42K</div><div class="text-xs price-up">+2.5%</div></div>
+                        <div class="bg-gray-800 rounded-lg p-2 text-center border-2 border-gray-700"><div class="text-2xl mb-1">Ξ</div><div class="font-bold text-white">ETH</div><div class="text-sm text-white">$2.5K</div><div class="text-xs price-down">-1.2%</div></div>
+                        <div class="bg-gray-800 rounded-lg p-2 text-center border-2 border-gray-700"><div class="text-2xl mb-1">◎</div><div class="font-bold text-white">SOL</div><div class="text-sm text-white">$95</div><div class="text-xs price-up">+5.8%</div></div>
+                        <div class="bg-gray-800 rounded-lg p-2 text-center border-2 border-gray-700"><div class="text-2xl mb-1">Ð</div><div class="font-bold text-white">DOGE</div><div class="text-sm text-white">$0.08</div><div class="text-xs price-up">+12%</div></div>
+                        <div class="bg-gray-800 rounded-lg p-2 text-center border-2 border-gray-700"><div class="text-2xl mb-1">₳</div><div class="font-bold text-white">ADA</div><div class="text-sm text-white">$0.55</div><div class="text-xs price-down">-0.8%</div></div>
+                        <div class="bg-gray-800 rounded-lg p-2 text-center border-2 border-gray-700"><div class="text-2xl mb-1">✕</div><div class="font-bold text-white">XRP</div><div class="text-sm text-white">$0.62</div><div class="text-xs price-up">+1.1%</div></div>
+                    </div>
+                    
+                    <!-- 8-BIT TERMINAL -->
+                    <div class="bit-terminal">
+                        <div class="bit-title">◄ LOG ►</div>
+                        <div class="bit-log-line">> Day 5 started</div>
+                        <div class="bit-log-line" style="color:#00dd00">> BTC +2.5%</div>
+                        <div class="bit-log-line" style="color:#00bb00">> ETH -1.2%</div>
+                        <div class="bit-log-line" style="color:#009900">> SOL +5.8%</div>
+                        <div class="bit-log-line" style="color:#007700">> DOGE +12%</div>
+                        <div class="bit-stats">
+                            <div>D:5 C:$5K</div>
+                            <div>D:$50K</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-nav">
+                        <div class="text-center"><span class="text-lg">🌴</span></div>
+                        <div class="text-center"><span class="text-lg">⚡</span></div>
+                        <div class="text-center"><span class="text-xl">⏭️</span></div>
+                        <div class="text-center"><span class="text-lg">💱</span></div>
+                        <div class="text-center"><span class="text-lg">💼</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VARIATION 3: Neon Glow -->
+        <div>
+            <h2 class="text-lg font-bold text-pink-400 mb-3">V3: Neon Glow</h2>
+            <div class="mockup">
+                <div class="screen" style="background: linear-gradient(180deg, #0f0014 0%, #1a0022 100%);">
+                    <!-- Header -->
+                    <div class="p-3 flex items-center gap-3" style="background: linear-gradient(90deg, #ff6b35, #ff0066);">
+                        <div class="text-lg font-black text-white">CRYPTO WARS</div>
+                        <div class="flex-1"></div>
+                        <div class="text-sm font-bold text-white bg-black/30 px-2 py-1 rounded">D5/30</div>
+                    </div>
+                    
+                    <!-- Compact Stats -->
+                    <div class="flex gap-2 px-3 py-2">
+                        <div class="bg-green-500/20 px-3 py-1 rounded-lg text-xs font-bold text-green-400 border border-green-500">+$5K</div>
+                        <div class="bg-red-500/20 px-3 py-1 rounded-lg text-xs font-bold text-red-400 border border-red-500">-$50K</div>
+                        <div class="bg-purple-500/20 px-3 py-1 rounded-lg text-xs font-bold text-purple-400 border border-purple-500">LOAN</div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="action-row">
+                        <button class="action-btn bg-gradient-to-r from-orange-500 to-red-500 text-white">DAY</button>
+                        <button class="action-btn bg-gradient-to-r from-blue-500 to-cyan-500 text-white">DEBT</button>
+                        <button class="action-btn bg-gradient-to-r from-purple-500 to-pink-500 text-white">LOAN</button>
+                        <button class="action-btn bg-gradient-to-r from-green-500 to-emerald-500 text-black">BUY</button>
+                    </div>
+                    
+                    <!-- Crypto List with Glow -->
+                    <div class="overflow-y-auto" style="height: 340px;">
+                        <div class="coin-card" style="border-color: #f7931a;"><div class="coin-icon" style="background: #f7931a; box-shadow: 0 0 15px #f7931a;">₿</div><div class="coin-info"><div class="coin-symbol text-white">BTC</div></div><div class="coin-price"><div class="coin-value text-white">$42K</div><div class="coin-change price-up">+2.5%</div></div></div>
+                        <div class="coin-card"><div class="coin-icon" style="background: #627eea;">Ξ</div><div class="coin-info"><div class="coin-symbol text-white">ETH</div></div><div class="coin-price"><div class="coin-value text-white">$2.5K</div><div class="coin-change price-down">-1.2%</div></div></div>
+                        <div class="coin-card"><div class="coin-icon" style="background: #00ffa3; box-shadow: 0 0 15px #00ffa3;">◎</div><div class="coin-info"><div class="coin-symbol text-white">SOL</div></div><div class="coin-price"><div class="coin-value text-white">$95</div><div class="coin-change price-up">+5.8%</div></div></div>
+                        <div class="coin-card"><div class="coin-icon" style="background: #c2a633; box-shadow: 0 0 15px #c2a633;">Ð</div><div class="coin-info"><div class="coin-symbol text-white">DOGE</div></div><div class="coin-price"><div class="coin-value text-white">$0.08</div><div class="coin-change price-up">+12%</div></div></div>
+                    </div>
+                    
+                    <!-- 8-BIT -->
+                    <div class="bit-terminal" style="background: #001100;">
+                        <div class="bit-title" style="color:#00ff00">◄ LOG ►</div>
+                        <div class="bit-log-line">> Day 5 started</div>
+                        <div class="bit-log-line">> BTC +2.5%</div>
+                        <div class="bit-log-line">> whale buy</div>
+                        <div class="bit-log-line">> SEC news</div>
+                        <div class="bit-log-line">> market rally</div>
+                        <div class="bit-stats">
+                            <div>D:5</div>
+                            <div>C:$5K</div>
+                            <div>N:-$45K</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-nav" style="border-color: #ff0066;">
+                        <div class="text-center"><span class="text-lg">🌴</span></div>
+                        <div class="text-center"><span class="text-lg">⚡</span></div>
+                        <div class="text-center"><span class="text-xl">⏭️</span></div>
+                        <div class="text-center"><span class="text-lg">💱</span></div>
+                        <div class="text-center"><span class="text-lg">💼</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- VARIATION 4: Minimal Bright -->
+        <div>
+            <h2 class="text-lg font-bold text-cyan-400 mb-3">V4: Minimal Bright</h2>
+            <div class="mockup">
+                <div class="screen" style="background: #12121a;">
+                    <!-- Ultra clean header -->
+                    <div class="p-2 flex items-center justify-between border-b border-gray-800">
+                        <span class="text-base font-bold text-orange-400">CW</span>
+                        <span class="text-xs bg-orange-500 text-black px-2 py-0.5 rounded font-bold">D5</span>
+                        <span class="text-xs text-green-400 font-bold">$5K</span>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="action-row" style="padding: 6px 10px;">
+                        <button class="action-btn bg-orange-500 text-white text-[10px] py-2">DAY</button>
+                        <button class="action-btn bg-blue-600 text-white text-[10px] py-2">DEBT</button>
+                        <button class="action-btn bg-purple-600 text-white text-[10px] py-2">LOAN</button>
+                        <button class="action-btn bg-green-600 text-white text-[10px] py-2">BUY</button>
+                    </div>
+                    
+                    <!-- Full width crypto list -->
+                    <div class="overflow-y-auto" style="height: 400px;">
+                        <div class="coin-card mx-1 my-0.5"><div class="coin-icon" style="background:#f7931a;width:32px;height:32px;font-size:14px">₿</div><div class="coin-info"><div class="coin-symbol text-white">BTC</div></div><div class="coin-price"><div class="coin-value text-white text-sm">$42K</div><div class="coin-change text-xs price-up">+2.5%</div></div></div>
+                        <div class="coin-card mx-1 my-0.5"><div class="coin-icon" style="background:#627eea;width:32px;height:32px;font-size:14px">Ξ</div><div class="coin-info"><div class="coin-symbol text-white">ETH</div></div><div class="coin-price"><div class="coin-value text-white text-sm">$2.5K</div><div class="coin-change text-xs price-down">-1.2%</div></div></div>
+                        <div class="coin-card mx-1 my-0.5"><div class="coin-icon" style="background:#00ffa3;width:32px;height:32px;font-size:14px">◎</div><div class="coin-info"><div class="coin-symbol text-white">SOL</div></div><div class="coin-price"><div class="coin-value text-white text-sm">$95</div><div class="coin-change text-xs price-up">+5.8%</div></div></div>
+                        <div class="coin-card mx-1 my-0.5"><div class="coin-icon" style="background:#c2a633;width:32px;height:32px;font-size:14px">Ð</div><div class="coin-info"><div class="coin-symbol text-white">DOGE</div></div><div class="coin-price"><div class="coin-value text-white text-sm">$0.08</div><div class="coin-change text-xs price-up">+12%</div></div></div>
+                        <div class="coin-card mx-1 my-0.5"><div class="coin-icon" style="background:#375bd2;width:32px;height:32px;font-size:14px">⬡</div><div class="coin-info"><div class="coin-symbol text-white">LINK</div></div><div class="coin-price"><div class="coin-value text-white text-sm">$15</div><div class="coin-change text-xs price-up">+0.5%</div></div></div>
+                        <div class="coin-card mx-1 my-0.5"><div class="coin-icon" style="background:#ff007a;width:32px;height:32px;font-size:14px">🦄</div><div class="coin-info"><div class="coin-symbol text-white">UNI</div></div><div class="coin-price"><div class="coin-value text-white text-sm">$7</div><div class="coin-change text-xs price-down">-2.1%</div></div></div>
+                    </div>
+                    
+                    <!-- 8-BIT -->
+                    <div class="bit-terminal" style="width:85px;">
+                        <div class="bit-title" style="font-size:8px">◄ LOG ►</div>
+                        <div class="bit-log-line" style="font-size:8px">> Day 5</div>
+                        <div class="bit-log-line" style="font-size:8px;color:#00dd00">> BTC +2.5</div>
+                        <div class="bit-log-line" style="font-size:8px;color:#00bb00">> ETH -1.2</div>
+                        <div class="bit-log-line" style="font-size:8px">> SOL +5.8</div>
+                        <div class="bit-log-line" style="font-size:8px">> DOGE +12</div>
+                        <div class="bit-stats" style="font-size:7px">
+                            <div>D5 C$5K</div>
+                            <div>D$50K</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-nav" style="padding:8px;">
+                        <div class="text-lg">🌴</div>
+                        <div class="text-lg">⚡</div>
+                        <div class="text-xl">⏭️</div>
+                        <div class="text-lg">💱</div>
+                        <div class="text-lg">💼</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <div class="mt-8 p-4 bg-gray-800/50 rounded-xl max-w-2xl mx-auto text-center">
+        <p class="text-gray-300">All variations keep: 8-bit green terminal with full text (no ...), bright colors, modern mobile layout</p>
+    </div>
+</body>
+</html>
