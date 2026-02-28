@@ -24,12 +24,12 @@
         body { margin: 0; font-family: 'Rajdhani', sans-serif; background: var(--bg); color: var(--text); }
 
         /* Header */
-        .header { position: absolute; top: 0; left: 0; right: 140px; height: 60px; padding: 6px 10px; display: flex; align-items: center; gap: 8px; background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%); }
-        .progress-ring { width: 44px; height: 44px; border-radius: 50%; background: conic-gradient(#ff6b35 var(--progress), #333 var(--progress)); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(255,107,53,0.5); flex-shrink: 0; }
-        .progress-inner { width: 34px; height: 34px; background: linear-gradient(135deg, #1a1a2e 0%, #12121a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; }
+        .header { position: absolute; top: 15px; left: 0; right: 140px; height: 45px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%); }
+        .progress-ring { width: 32px; height: 32px; border-radius: 50%; background: conic-gradient(#ff6b35 var(--progress), #333 var(--progress)); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(255,107,53,0.5); flex-shrink: 0; }
+        .progress-inner { width: 26px; height: 26px; background: linear-gradient(135deg, #1a1a2e 0%, #12121a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
 
         /* Event Area - THE STORY */
-        .event-area { position: absolute; bottom: 85px; left: 0; right: 0; height: 130px; padding: 8px 12px; background: linear-gradient(180deg, #0a0a14 0%, #1a1a2e 100%); border-top: 3px solid #ff6b35; overflow-y: auto; scrollbar-width: none; }
+        .event-area { position: absolute; bottom: 85px; left: 0; right: 0; height: 120px; padding: 6px 10px; background: linear-gradient(180deg, #0a0a14 0%, #1a1a2e 100%); border-top: 3px solid #ff6b35; overflow-y: auto; scrollbar-width: none; }
         .event-area::-webkit-scrollbar { display: none; }
         .event-title { font-size: 16px; color: #ff6b35; font-weight: 700; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
         .event-text { font-size: 13px; color: #aaa; line-height: 1.4; margin-bottom: 4px; }
@@ -49,7 +49,7 @@
         .wallet-coin { padding: 2px 6px; border-radius: 4px; font-size: 12px; white-space: nowrap; font-weight: bold; text-shadow: 0 0 5px currentColor; }
 
         /* Crypto Grid */
-        .crypto-area { position: absolute; left: 0; right: 140px; top: 60px; bottom: 220px; padding: 6px; overflow-y: auto; }
+        .crypto-area { position: absolute; left: 0; right: 140px; top: 60px; bottom: 210px; padding: 4px; overflow-y: auto; }
         .crypto-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; height: 100%; }
         .crypto-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 4px; border-radius: 8px; background: linear-gradient(135deg, #2a2a3e 0%, #1e1e2e 100%); min-height: 60px; cursor: pointer; }
         .crypto-card:hover { border: 2px solid #ff6b35; transform: scale(1.02); }
@@ -61,14 +61,14 @@
         .price-down { color: #ff4488; text-shadow: 0 0 6px rgba(255,68,136,0.6); }
 
         /* 8-BIT TERMINAL */
-        .bit-terminal { position: absolute; right: 0; top: 0; bottom: 220px; width: 140px; background: #0a0a0a; border-left: 3px solid #444; padding: 8px; font-family: 'Rajdhani', sans-serif; font-size: 11px; color: #ffffff; overflow-y: auto; scrollbar-width: none; }
+        .bit-terminal { position: absolute; right: 0; top: 30px; bottom: 210px; width: 140px; background: #0a0a0a; border-left: 3px solid #444; padding: 6px; font-family: 'Rajdhani', sans-serif; font-size: 11px; color: #ffffff; overflow-y: auto; scrollbar-width: none; }
         .bit-terminal::-webkit-scrollbar { display: none; }
         .bit-title { text-align: center; border-bottom: 2px solid #444; padding-bottom: 4px; margin-bottom: 6px; color: #aaa; font-weight: bold; font-size: 11px; }
         .bit-log-line { margin-bottom: 6px; line-height: 1.3; font-size: 10px; color: #ddd; }
         .bit-stats { position: absolute; bottom: 8px; left: 8px; right: 8px; border-top: 2px solid #444; padding-top: 4px; font-size: 12px; }
 
         /* Bottom Toolbar */
-        .bottom-toolbar { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 8px 6px; background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 100%); border-top: 3px solid #ff6b35; }
+        .bottom-toolbar { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; padding: 6px 4px; background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 100%); border-top: 3px solid #ff6b35; }
         .toolbar-btn { padding: 8px 12px; border-radius: 8px; font-weight: 800; font-size: 9px; text-align: center; min-width: 50px; cursor: pointer; }
         .btn-travel { background: linear-gradient(135deg, #00b894, #00a884); color: #fff; box-shadow: 0 0 10px rgba(0,184,148,0.5); }
         .btn-upgrades { background: linear-gradient(135deg, #fdcb6e, #f39c12); color: #000; box-shadow: 0 0 10px rgba(253,203,110,0.5); }
@@ -529,6 +529,8 @@
             }
 
             return h('div', { className: 'min-h-screen relative' },
+                // Orange top bar
+                h('div', { style: { position: 'absolute', top: 0, left: 0, right: 0, height: '10px', background: 'linear-gradient(90deg, #ff6b35, #ff8c42)', zIndex: 100 } }),
                 // Header
                 h('div', { className: 'header' },
                     h('div', null,
