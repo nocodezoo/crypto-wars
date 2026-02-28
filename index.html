@@ -112,16 +112,14 @@
             height: calc(100% - 140px);
             overflow-y: auto;
             padding-right: 5px;
-            display: flex;
-            flex-direction: column;
         }
         
         .bit-log div {
-            margin-bottom: 8px;
-            white-space: normal;
-            word-wrap: break-word;
-            line-height: 1.5;
-            font-size: 16px;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
         }
         
         .bit-stats {
@@ -182,7 +180,7 @@
     <div id="root"></div>
 
     <script>
-        const { useState, useEffect, useRef, createElement: h } = React;
+        const { useState, useEffect, createElement: h } = React;
         
         // === CRYPTOCURRENCIES ===
         const CRYPTOS = {
@@ -252,14 +250,6 @@
             const [showModal, setShowModal] = useState(null);
             const [tradeModal, setTradeModal] = useState(null); // {symbol, type, price, max}
             const [tradeAmount, setTradeAmount] = useState('');
-            const logRef = useRef(null);
-            
-            // Auto-scroll log to top when new entries
-            useEffect(() => {
-                if (logRef.current) {
-                    logRef.current.scrollTop = 0;
-                }
-            }, [log]);
             const [walletCapacity, setWalletCapacity] = useState(100);
             const [defiDebt, setDefiDebt] = useState(0);
             const [defiLoans, setDefiLoans] = useState([]); // Track active loans
@@ -580,28 +570,6 @@
                 addLog(`🤑 Bought ALL: ${bought.join(', ')} | Total: $${totalSpent.toFixed(2)}`);
             };
             
-            // === SELL ===
-            const sell = (symbol) => {
-                const qty = portfolio[symbol] || 0;
-                if (qty <= 0) {
-                    addLog(`❌ No ${symbol} to sell!`);
-                    return;
-                }
-                
-                const fee = getFeeRate();
-                const price = prices[symbol] * (1 - fee);
-                
-                const sellQty = prompt(`Sell ${symbol}?\nOwned: ${qty.toFixed(4)}\nPrice: $${price.toFixed(2)}`, qty);
-                
-                if (sellQty && !isNaN(sellQty) && sellQty > 0) {
-                    const amount = Math.min(parseFloat(sellQty), qty);
-                    const revenue = amount * price;
-                    setCash(c => c + revenue);
-                    setPortfolio(p => ({...p, [symbol]: p[symbol] - amount}));
-                    addLog(`💰 Sold ${amount.toFixed(4)} ${symbol} for $${revenue.toFixed(2)}`);
-                }
-            };
-            
             // === PAY DEBT ===
             const payDebt = () => {
                 const maxPay = Math.min(cash, debt);
@@ -723,7 +691,7 @@
             // 8-bit terminal panel
             const renderBitPanel = () => h('div', { className: 'bit-panel' },
                 h('div', { className: 'bit-title' }, '◄ CRYPTO LOG ►'),
-                h('div', { className: 'bit-log', ref: logRef },
+                h('div', { className: 'bit-log' },
                     log.map((msg, i) => 
                         h('div', { key: i, style: { 
                             color: i === 0 ? '#00ff00' : i < 5 ? '#00cc00' : '#006600',
@@ -969,20 +937,47 @@
                                 h('div', { className: 'flex items-center gap-3' },
                                     h('span', { className: 'text-4xl', style: { color: CRYPTOS[tradeModal.symbol].color } }, CRYPTOS[tradeModal.symbol].icon),
                                     h('div', null,
-                                        h('h2', { className: 'text-2xl font-bold' }, tradeModal.type === 'buy' ? 'BUY' : 'SELL'),
-                                        h('p', { className: 'text-sm text-gray-400' }, tradeModal.symbol)
+                                        h('h2', { className: 'text-2xl font-bold' }, tradeModal.symbol),
+                                        h('p', { className: 'text-sm text-gray-400' }, '$' + tradeModal.price.toFixed(2))
                                     )
                                 ),
                                 h('button', { onClick: () => setTradeModal(null), className: 'text-3xl text-gray-400' }, '×')
                             ),
-                            h('div', { className: 'bg-black/30 rounded-lg p-3 mb-4' },
-                                h('div', { className: 'flex justify-between' },
-                                    h('span', { className: 'text-gray-400' }, 'Price:'),
-                                    h('span', { className: 'font-bold' }, '$' + tradeModal.price.toFixed(2))
-                                ),
-                                h('div', { className: 'flex justify-between mt-1' },
+                            
+                            // BUY/SELL toggle buttons
+                            portfolio[tradeModal.symbol] > 0 ? 
+                                h('div', { className: 'flex gap-2 mb-4' },
+                                    h('button', { 
+                                        onClick: () => {
+                                            const fee = getFeeRate();
+                                            const price = prices[tradeModal.symbol] * (1 + fee);
+                                            setTradeModal({...tradeModal, type: 'buy', price, max: cash / price});
+                                            setTradeAmount((cash / price).toFixed(6));
+                                        },
+                                        className: 'flex-1 py-3 rounded-xl font-bold',
+                                        style: { background: tradeModal.type === 'buy' ? '#00ff88' : '#333', color: tradeModal.type === 'buy' ? '#000' : '#fff' }
+                                    }, 'BUY'),
+                                    h('button', { 
+                                        onClick: () => {
+                                            const fee = getFeeRate();
+                                            const price = prices[tradeModal.symbol] * (1 - fee);
+                                            const owned = portfolio[tradeModal.symbol];
+                                            setTradeModal({...tradeModal, type: 'sell', price, max: owned});
+                                            setTradeAmount(owned.toFixed(6));
+                                        },
+                                        className: 'flex-1 py-3 rounded-xl font-bold',
+                                        style: { background: tradeModal.type === 'sell' ? '#ff0080' : '#333', color: tradeModal.type === 'sell' ? '#000' : '#fff' }
+                                    }, 'SELL')
+                                ) : null,
+                            
+                            h('div', { className: 'bg-black/30 rounded-lg p-3 mb-3' },
+                                h('div', { className: 'flex justify-between text-sm' },
                                     h('span', { className: 'text-gray-400' }, 'Fee:'),
                                     h('span', { className: 'text-orange-400' }, (getFeeRate() * 100).toFixed(1) + '%')
+                                ),
+                                portfolio[tradeModal.symbol] > 0 && h('div', { className: 'flex justify-between text-sm mt-1' },
+                                    h('span', { className: 'text-gray-400' }, 'Owned:'),
+                                    h('span', { className: 'text-white' }, portfolio[tradeModal.symbol].toFixed(4))
                                 )
                             ),
                             h('input', {
