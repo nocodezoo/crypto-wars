@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Crypto Wars 🦞🔥</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -274,7 +274,7 @@
                     setPrices(state.prices || {});
                     setLocation(state.location || LOCATIONS[0]);
                     setCurrentExchange(state.currentExchange || EXCHANGES[0]);
-                    setDefiDebt(state.defiDebt || 0);
+                    setDefiDebt(typeof state.defiDebt === 'number' && state.defiDebt > 0 ? state.defiDebt : 5000);
                     setUpgrades(state.upgrades || {});
                     setWalletCapacity(state.walletCapacity || 500);
                     setGameLength(state.gameLength || 30);
@@ -295,13 +295,13 @@
                 setPrices(initialPrices);
                 setLocation(LOCATIONS[0]);
                 setCurrentExchange(EXCHANGES[0]);
-                setDefiDebt(0);
+                setDefiDebt(5000); // Start with $5000 debt from loan shark
                 setUpgrades({});
                 setWalletCapacity(500);
                 setGameOver(false);
                 setGameStarted(true);
-                setLogs(['Day 1 started - Good luck!']);
-                setEvents(['Welcome to Crypto Wars!']);
+                setLogs(['Day 1 started - You owe the loan shark $5000!']);
+                setEvents(['Welcome to Crypto Wars! Pay off your debt!']);
                 localStorage.removeItem('cryptoWarsSave');
             };
 
@@ -531,16 +531,18 @@
             return h('div', { className: 'min-h-screen relative' },
                 // Header
                 h('div', { className: 'header' },
-                    h('div', { className: 'progress-ring', style: { '--progress': (day/gameLength*100) + '%' } },
-                        h('div', { className: 'progress-inner text-white' }, `${day}/${gameLength}`)
-                    ),
                     h('div', null,
                         h('div', { className: 'text-lg font-bold text-neon-orange' }, 'CRYPTO WARS'),
                         h('div', { className: 'text-sm text-gray-400' }, `${currentExchange.name} • ${location.name}`)
                     ),
-                    h('div', { className: 'ml-auto text-right' },
-                        h('div', { className: 'text-lg font-bold text-green-400' }, `$${isNaN(cash) ? 0 : cash.toFixed(0)}`),
-                        h('div', { className: 'text-xs text-gray-500' }, 'cash')
+                    h('div', { className: 'ml-auto', style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+                        h('div', { className: 'progress-ring', style: { '--progress': (day/gameLength*100) + '%' } },
+                            h('div', { className: 'progress-inner text-white' }, `${day}/${gameLength}`)
+                        ),
+                        h('div', { className: 'text-right' },
+                            h('div', { className: 'text-lg font-bold text-green-400' }, `$${isNaN(cash) ? 0 : cash.toFixed(0)}`),
+                            h('div', { className: 'text-xs text-gray-500' }, 'cash')
+                        )
                     )
                 ),
 
@@ -821,22 +823,33 @@
                     h('div', { className: 'modal-content', onClick: e => e.stopPropagation() },
                         h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
                         h('div', { className: 'modal-title' }, '🦈 DEFI LOAN SHARK'),
-                        h('div', { style: { textAlign: 'center', marginBottom: '20px' } },
+                        h('div', { style: { textAlign: 'center', marginBottom: '15px' } },
                             h('div', { style: { fontSize: '14px', color: '#aaa' } }, 'Current Debt'),
                             h('div', { style: { fontSize: '28px', color: '#ff4488', fontWeight: 'bold' } }, `$${defiDebt.toFixed(2)}`),
-                            h('div', { style: { fontSize: '12px', color: '#666' } }, '0.5% daily interest • 150% collateral')
+                            h('div', { style: { fontSize: '12px', color: '#666' } }, '0.5% daily • 150% collateral')
+                        ),
+                        h('div', { style: { marginBottom: '15px' } },
+                            h('div', { style: { fontSize: '12px', color: '#aaa', marginBottom: '6px' } }, 'Borrow Amount:'),
+                            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' } },
+                                h('button', {
+                                    onClick: () => handleDefiBorrow(Math.floor(cash * 0.25)),
+                                    style: { padding: '10px', background: cash * 0.25 * 1.5 <= cash ? '#fd79a8' : '#333', border: 'none', borderRadius: '6px', color: '#fff', cursor: cash * 0.25 * 1.5 <= cash ? 'pointer' : 'not-allowed' }
+                                }, `$${Math.floor(cash * 0.25)}`),
+                                h('button', {
+                                    onClick: () => handleDefiBorrow(Math.floor(cash * 0.5)),
+                                    style: { padding: '10px', background: cash * 0.5 * 1.5 <= cash ? '#fd79a8' : '#333', border: 'none', borderRadius: '6px', color: '#fff', cursor: cash * 0.5 * 1.5 <= cash ? 'pointer' : 'not-allowed' }
+                                }, `$${Math.floor(cash * 0.5)}`),
+                                h('button', {
+                                    onClick: () => handleDefiBorrow(Math.floor(cash * 0.75)),
+                                    style: { padding: '10px', background: cash * 0.75 * 1.5 <= cash ? '#fd79a8' : '#333', border: 'none', borderRadius: '6px', color: '#fff', cursor: cash * 0.75 * 1.5 <= cash ? 'pointer' : 'not-allowed' }
+                                }, `$${Math.floor(cash * 0.75)}`)
+                            ),
+                            h('div', { style: { fontSize: '10px', color: '#666', marginTop: '4px', textAlign: 'center' } }, `Max: $${Math.floor(cash / 1.5)} (needs 150% collateral)`)
                         ),
                         h('div', { style: { display: 'flex', gap: '10px' } },
                             h('button', {
-                                className: 'trade-btn',
-                                style: { flex: 1, background: '#fd79a8' },
-                                onClick: () => handleDefiBorrow(Math.floor(cash * 0.5))
-                            }, '🦈 BORROW'),
-                            h('button', {
-                                className: 'trade-btn',
-                                style: { flex: 1, background: defiDebt > 0 ? '#00ff88' : '#333', color: defiDebt > 0 ? '#000' : '#666' },
                                 onClick: handleDefiPay,
-                                disabled: defiDebt <= 0
+                                style: { flex: 1, padding: '12px', background: defiDebt > 0 ? '#00ff88' : '#333', border: 'none', borderRadius: '8px', color: defiDebt > 0 ? '#000' : '#666', fontWeight: 'bold', cursor: defiDebt > 0 ? 'pointer' : 'not-allowed' }
                             }, '💰 PAY OFF')
                         )
                     )
