@@ -199,6 +199,8 @@
             const [log, setLog] = useState(['🦞 Welcome to Crypto Wars!', '🔥 Molten edition - make it hot!', `Day 1 - $${INITIAL_CASH} cash, $${INITIAL_DEBT} debt`]);
             const [showModal, setShowModal] = useState(null);
             const [walletCapacity, setWalletCapacity] = useState(100);
+            const [defiDebt, setDefiDebt] = useState(0);
+            const [defiLoans, setDefiLoans] = useState([]); // Track active loans
             
             const addLog = (msg) => setLog(l => [msg, ...l].slice(0, 12));
             
@@ -209,7 +211,7 @@
                 }, 0);
             };
             
-            const getNetWorth = () => cash + getPortfolioValue() - debt;
+            const getNetWorth = () => cash + getPortfolioValue() - debt - defiDebt;
             
             const getTotalCrypto = () => {
                 return Object.values(portfolio).reduce((sum, qty) => sum + qty, 0);
@@ -300,9 +302,18 @@
             
             // === NEXT DAY ===
             const nextDay = () => {
-                // Apply interest
+                // Apply loan shark interest (3%)
                 const interest = debt * DAILY_DEBT_INTEREST;
                 setDebt(d => d + interest);
+                
+                // Apply DeFi interest (0.5% daily) - sharks are expensive!
+                if (defiDebt > 0) {
+                    const defiInterest = defiDebt * 0.005;
+                    setDefiDebt(d => d + defiInterest);
+                    if (Math.random() < 0.2) {
+                        addLog(`🦈 DeFi interest: +$${defiInterest.toFixed(0)}`);
+                    }
+                }
                 
                 // Fluctuate prices
                 fluctuatePrices();
@@ -326,14 +337,14 @@
                 addLog(`📅 Day ${day + 1} - Interest: $${interest.toFixed(0)}`);
             };
             
-            // === BUY ===
-            const buy = (symbol) => {
+            // === BUY (supports fractions) ===
+            const buy = (symbol, amount = null) => {
                 const fee = getFeeRate();
                 const price = prices[symbol] * (1 + fee);
-                const maxQty = Math.floor(cash / price);
+                const maxQty = cash / price; // Fractional allowed!
                 const capacity = getCapacity() - getTotalCrypto();
                 
-                if (maxQty <= 0) {
+                if (maxQty <= 0.0001) {
                     addLog(`❌ Not enough cash to buy ${symbol}!`);
                     return;
                 }
@@ -343,15 +354,63 @@
                     return;
                 }
                 
-                const qty = prompt(`Buy ${symbol}?\nMax: ${maxQty.toFixed(4)}\nPrice: $${price.toFixed(2)}\nFee: ${(fee * 100).toFixed(1)}%`, Math.min(maxQty, capacity));
+                const maxAffordable = Math.min(maxQty, capacity);
+                
+                // If amount specified (buy all), use it
+                if (amount !== null) {
+                    const qty = Math.min(amount, maxAffordable);
+                    const cost = qty * price;
+                    if (cost > cash) {
+                        addLog(`❌ Not enough cash!`);
+                        return;
+                    }
+                    setCash(c => c - cost);
+                    setPortfolio(p => ({...p, [symbol]: (p[symbol] || 0) + qty}));
+                    addLog(`✅ Bought ${qty.toFixed(6)} ${symbol} for $${cost.toFixed(2)}`);
+                    return;
+                }
+                
+                // Otherwise prompt with fractional support
+                const qty = prompt(`Buy ${symbol}?\nMax: ${maxAffordable.toFixed(6)}\nPrice: $${price.toFixed(2)}\nFee: ${(fee * 100).toFixed(1)}%`, maxAffordable.toFixed(6));
                 
                 if (qty && !isNaN(qty) && qty > 0) {
-                    const amount = Math.min(parseFloat(qty), maxQty, capacity);
-                    const cost = amount * price;
+                    const amountBought = Math.min(parseFloat(qty), maxAffordable);
+                    const cost = amountBought * price;
                     setCash(c => c - cost);
-                    setPortfolio(p => ({...p, [symbol]: (p[symbol] || 0) + amount}));
-                    addLog(`✅ Bought ${amount.toFixed(4)} ${symbol} for $${cost.toFixed(2)}`);
+                    setPortfolio(p => ({...p, [symbol]: (p[symbol] || 0) + amountBought}));
+                    addLog(`✅ Bought ${amountBought.toFixed(6)} ${symbol} for $${cost.toFixed(2)}`);
                 }
+            };
+            
+            // === BUY ALL (max affordable of each crypto) ===
+            const buyAll = () => {
+                const fee = getFeeRate();
+                const capacity = getCapacity() - getTotalCrypto();
+                if (capacity <= 0) {
+                    addLog(`❌ Wallet full! Upgrade capacity.`);
+                    return;
+                }
+                
+                let totalSpent = 0;
+                let bought = [];
+                
+                // Buy max of each crypto we can afford
+                Object.entries(prices).forEach(([symbol, price]) => {
+                    const costPerUnit = price * (1 + fee);
+                    const maxAffordable = cash / costPerUnit;
+                    if (maxAffordable > 0.0001 && capacity > 0) {
+                        const amount = Math.min(maxAffordable, capacity);
+                        const cost = amount * costPerUnit;
+                        if (cost <= cash) {
+                            setPortfolio(p => ({...p, [symbol]: (p[symbol] || 0) + amount}));
+                            totalSpent += cost;
+                            bought.push(`${amount.toFixed(4)} ${symbol}`);
+                        }
+                    }
+                });
+                
+                setCash(c => c - totalSpent);
+                addLog(`🤑 Bought ALL: ${bought.join(', ')} | Total: $${totalSpent.toFixed(2)}`);
             };
             
             // === SELL ===
@@ -386,6 +445,50 @@
                     setCash(c => c - amount);
                     setDebt(d => d - amount);
                     addLog(`💳 Paid $${amount.toFixed(0)} toward debt`);
+                }
+            };
+            
+            // === DEFI LOAN (from sharks) ===
+            const getDefiLoan = () => {
+                const maxLoan = Math.floor(cash * 5); // Can borrow 5x cash
+                if (maxLoan < 100) {
+                    addLog(`❌ Need more cash for DeFi loans!`);
+                    return;
+                }
+                
+                const amount = prompt(`🦈 DEFI LOAN SHARK 🦈\nMax: $${maxLoan}\nRate: 0.5% daily\nCollateral: Required`, Math.floor(maxLoan * 0.5));
+                
+                if (amount && !isNaN(amount) && amount > 0) {
+                    const loanAmount = Math.min(parseFloat(amount), maxLoan);
+                    const collateral = loanAmount * 1.5; // 150% collateral
+                    
+                    if (getPortfolioValue() + cash < collateral) {
+                        addLog(`❌ Need $${collateral.toFixed(0)} collateral!`);
+                        return;
+                    }
+                    
+                    setCash(c => c + loanAmount);
+                    setDefiDebt(d => d + loanAmount);
+                    setDefiLoans(loans => [...loans, { amount: loanAmount, collateral: collateral, day: day }]);
+                    addLog(`🦈 Took $${loanAmount.toFixed(0)} DeFi loan! Collateral: $${collateral.toFixed(0)}`);
+                }
+            };
+            
+            // === PAY DEFI DEBT ===
+            const payDefiDebt = () => {
+                if (defiDebt <= 0) {
+                    addLog(`No DeFi debt to pay!`);
+                    return;
+                }
+                
+                const maxPay = Math.min(cash, defiDebt);
+                const pay = prompt(`Pay DeFi debt?\nOwed: $${defiDebt.toFixed(0)}\nCash: $${cash.toFixed(0)}`, Math.floor(maxPay));
+                
+                if (pay && !isNaN(pay) && pay > 0) {
+                    const amount = Math.min(parseFloat(pay), cash, defiDebt);
+                    setCash(c => c - amount);
+                    setDefiDebt(d => d - amount);
+                    addLog(`🦈 Paid $${amount.toFixed(0)} DeFi debt`);
                 }
             };
             
@@ -465,22 +568,26 @@
                     ),
                     
                     // STATS
-                    h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-3 mb-5' },
-                        h('div', { className: 'card text-center py-3' }, 
+                    h('div', { className: 'grid grid-cols-2 md:grid-cols-5 gap-2 mb-5' },
+                        h('div', { className: 'card text-center py-2' }, 
                             h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Cash'), 
-                            h('p', { className: 'text-lg font-bold mono', style: { color: 'var(--success)' } }, '$' + cash.toFixed(0))
+                            h('p', { className: 'text-sm font-bold mono', style: { color: 'var(--success)' } }, '$' + cash.toFixed(0))
                         ),
-                        h('div', { className: 'card text-center py-3' }, 
-                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Debt'), 
-                            h('p', { className: 'text-lg font-bold mono', style: { color: debt > INITIAL_DEBT ? 'var(--danger)' : 'var(--warning)' } }, '$' + debt.toFixed(0))
+                        h('div', { className: 'card text-center py-2' }, 
+                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Loan Shark'), 
+                            h('p', { className: 'text-sm font-bold mono', style: { color: debt > INITIAL_DEBT ? 'var(--danger)' : 'var(--warning)' } }, '$' + debt.toFixed(0))
                         ),
-                        h('div', { className: 'card text-center py-3' }, 
+                        h('div', { className: 'card text-center py-2' }, 
+                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, '🦈 DeFi'), 
+                            h('p', { className: 'text-sm font-bold mono', style: { color: defiDebt > 0 ? '#aa44ff' : 'var(--text-muted)' } }, '$' + defiDebt.toFixed(0))
+                        ),
+                        h('div', { className: 'card text-center py-2' }, 
                             h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Portfolio'), 
-                            h('p', { className: 'text-lg font-bold mono' }, '$' + getPortfolioValue().toFixed(0))
+                            h('p', { className: 'text-sm font-bold mono' }, '$' + getPortfolioValue().toFixed(0))
                         ),
-                        h('div', { className: 'card text-center py-3' }, 
+                        h('div', { className: 'card text-center py-2' }, 
                             h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Net Worth'), 
-                            h('p', { className: 'text-lg font-bold mono', style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, '$' + netWorth.toFixed(0))
+                            h('p', { className: 'text-sm font-bold mono', style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, '$' + netWorth.toFixed(0))
                         )
                     ),
                     
@@ -494,7 +601,13 @@
                     
                     // MARKET
                     h('div', { className: 'mb-5' },
-                        h('h2', { className: 'text-xl font-bold mb-3' }, '📈 Market'),
+                        h('div', { className: 'flex justify-between items-center mb-3' },
+                            h('h2', { className: 'text-xl font-bold' }, '📈 Market'),
+                            h('button', { 
+                                onClick: buyAll,
+                                className: 'px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-500'
+                            }, '🤑 Buy All')
+                        ),
                         h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-3' },
                             Object.entries(CRYPTOS).map(([symbol, info]) => {
                                 const price = prices[symbol];
@@ -534,15 +647,28 @@
                     ),
                     
                     // ACTIONS
-                    h('div', { className: 'grid grid-cols-2 gap-3 mb-5' },
+                    h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-2 mb-5' },
                         h('button', { 
                             onClick: nextDay,
-                            className: 'py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl text-lg lava-glow pulsing'
+                            className: 'py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl lava-glow pulsing'
                         }, '⏭ Next Day'),
                         h('button', { 
                             onClick: payDebt,
-                            className: 'py-4 bg-blue-600 text-white font-bold rounded-xl text-lg hover:bg-blue-500'
-                        }, '💳 Pay Debt')
+                            className: 'py-3 bg-blue-600 text-white font-bold rounded-xl'
+                        }, '💳 Pay Debt'),
+                        h('button', { 
+                            onClick: buyAll,
+                            className: 'py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-500'
+                        }, '🤑 Buy All'),
+                        defiDebt > 0 ? 
+                            h('button', { 
+                                onClick: payDefiDebt,
+                                className: 'py-3 bg-purple-600 text-white font-bold rounded-xl'
+                            }, '🦈 Pay DeFi') :
+                            h('button', { 
+                                onClick: getDefiLoan,
+                                className: 'py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-500'
+                            }, '🦈 DeFi Loan')
                     ),
                     
                     // LOG
