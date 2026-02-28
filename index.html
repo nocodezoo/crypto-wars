@@ -36,11 +36,11 @@
         .event-highlight { color: #00ff88; font-weight: 600; }
         
         /* Wallet Display */
-        .wallet-display { position: absolute; bottom: 50px; left: 0; right: 0; height: 100px; padding: 6px 10px; display: flex; flex-direction: column; background: linear-gradient(90deg, #2a1a3e 0%, #1a2a3e 100%); border-top: 3px solid #a29bfe; }
-        .wallet-bar { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 4px; }
-        .wallet-bar-fill { height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7); border-radius: 4px; transition: width 0.3s; }
-        .wallet-holdings { display: flex; gap: 8px; overflow-x: auto; }
-        .wallet-coin { background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 16px; white-space: nowrap; }
+        .wallet-display { position: absolute; bottom: 50px; left: 0; right: 0; height: 55px; padding: 3px 6px; display: flex; flex-direction: column; background: linear-gradient(90deg, #2a1a3e 0%, #1a2a3e 100%); border-top: 3px solid #a29bfe; }
+        .wallet-bar { width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; margin-top: 2px; }
+        .wallet-bar-fill { height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7); border-radius: 2px; transition: width 0.3s; }
+        .wallet-holdings { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-start; align-items: center; }
+        .wallet-coin { padding: 2px 6px; border-radius: 4px; font-size: 12px; white-space: nowrap; font-weight: bold; text-shadow: 0 0 5px currentColor; }
         
         /* Crypto Grid */
         .crypto-area { position: absolute; left: 0; right: 140px; top: 60px; bottom: 240px; padding: 6px; overflow-y: auto; }
@@ -126,7 +126,7 @@
         const h = React.createElement;
         
         // === GAME CONSTANTS ===
-        const GAME_DAYS = 30;
+        const GAME_DAYS_OPTIONS = [30, 45, 60];
         const CRYPTOS = [
             { symbol: 'BTC', name: 'Bitcoin', icon: '₿', color: '#f7931a', price: 42000 },
             { symbol: 'ETH', name: 'Ethereum', icon: 'Ξ', color: '#627eea', price: 2500 },
@@ -217,8 +217,11 @@
             { text: '🎭 DRAMA QUEEN - Celebrity feud!', effect: 'random', value: 0.15 }
         ];
         
+        const gameLength_OPTIONS = [30, 45, 60];
+        
         // === MAIN APP ===
         function App() {
+            const [gameLength, setGameLength] = useState(30);
             const [day, setDay] = useState(1);
             const [cash, setCash] = useState(5000);
             const [holdings, setHoldings] = useState({});
@@ -231,6 +234,7 @@
             const [logs, setLogs] = useState(['Day 1 started']);
             const [events, setEvents] = useState(['Welcome to Crypto Wars! Tap coins to trade.']);
             const [gameOver, setGameOver] = useState(false);
+            const [gameStarted, setGameStarted] = useState(false);
             const [eventEffect, setEventEffect] = useState(null); // 'good', 'bad', 'none'
             const [modal, setModal] = useState(null); // 'trade', 'travel', 'upgrades', 'defi', 'gameover'
             const [tradeModal, setTradeModal] = useState(null);
@@ -247,12 +251,60 @@
                 setLogs(prev => [msg, ...prev].slice(0, 50));
             };
             
+            // Save/Load game
+            const saveGame = () => {
+                const gameState = { day, cash, holdings, prices, location, currentExchange, defiDebt, upgrades, walletCapacity, gameLength };
+                localStorage.setItem('cryptoWarsSave', JSON.stringify(gameState));
+                addLog('💾 Game saved!');
+            };
+            
+            const loadGame = () => {
+                const saved = localStorage.getItem('cryptoWarsSave');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    setDay(state.day || 1);
+                    setCash(state.cash || 5000);
+                    setHoldings(state.holdings || {});
+                    setPrices(state.prices || {});
+                    setLocation(state.location || LOCATIONS[0]);
+                    setCurrentExchange(state.currentExchange || EXCHANGES[0]);
+                    setDefiDebt(state.defiDebt || 0);
+                    setUpgrades(state.upgrades || {});
+                    setWalletCapacity(state.walletCapacity || 500);
+                    setGameLength(state.gameLength || 30);
+                    setGameStarted(true);
+                    addLog('📂 Game loaded!');
+                }
+            };
+            
+            const startGame = (length) => {
+                // Initialize prices
+                const initialPrices = {};
+                CRYPTOS.forEach(c => initialPrices[c.symbol] = c.price);
+                
+                setGameLength(length);
+                setDay(1);
+                setCash(5000);
+                setHoldings({});
+                setPrices(initialPrices);
+                setLocation(LOCATIONS[0]);
+                setCurrentExchange(EXCHANGES[0]);
+                setDefiDebt(0);
+                setUpgrades({});
+                setWalletCapacity(500);
+                setGameOver(false);
+                setGameStarted(true);
+                setLogs(['Day 1 started - Good luck!']);
+                setEvents(['Welcome to Crypto Wars!']);
+                localStorage.removeItem('cryptoWarsSave');
+            };
+            
             const addEvent = (msg) => {
                 setEvents(prev => [msg, ...prev].slice(0, 5));
             };
             
             const advanceDay = () => {
-                if (day >= GAME_DAYS) {
+                if (day >= gameLength) {
                     setGameOver(true);
                     setModal('gameover');
                     return;
@@ -314,16 +366,30 @@
             };
             
             const handleCryptoClick = (crypto) => {
-                const fee = currentExchange.fee;
-                const price = (prices[crypto.symbol] || crypto.price) * location.multiplier * (1 + fee);
-                const maxBuy = Math.min(cash / price, getWalletCapacity() - getTotalCrypto());
-                setTradeModal({ symbol: crypto.symbol, type: 'buy', price, max: Math.max(0, maxBuy) });
-                setTradeAmount(maxBuy.toFixed(6));
+                const fee = currentExchange?.fee || 0.006;
+                const basePrice = prices?.[crypto.symbol] || crypto.price || 0;
+                const price = basePrice * (location?.multiplier || 1) * (1 + fee);
+                const cashAvailable = isNaN(cash) ? 0 : cash;
+                const walletSpace = Math.max(0, getWalletCapacity() - getTotalCrypto());
+                const maxBuy = price > 0 ? Math.min(cashAvailable / price, walletSpace) : 0;
+                setTradeModal({ symbol: crypto.symbol, type: 'buy', price, max: maxBuy });
+                setTradeAmount(maxBuy > 0 ? maxBuy.toFixed(6) : '0');
                 setModal('trade');
             };
             
             const handleTrade = (amount) => {
                 if (!tradeModal || !amount || amount <= 0) return;
+                
+                // Check wallet crypto limit (max 10 different cryptos)
+                if (tradeModal.type === 'buy') {
+                    const currentCryptos = Object.keys(holdings).filter(k => holdings[k] > 0).length;
+                    const alreadyHas = (holdings[tradeModal.symbol] || 0) > 0;
+                    if (!alreadyHas && currentCryptos >= 10) {
+                        addLog(`❌ Wallet limit! Max 10 cryptocurrencies.`);
+                        alert('Wallet Limit Reached!\n\nYou can only hold 10 different cryptocurrencies at once.\n\nSell some to make room for new ones.');
+                        return;
+                    }
+                }
                 
                 // Check wallet capacity for buys
                 if (tradeModal.type === 'buy') {
@@ -427,18 +493,47 @@
             };
             
             // Render
+            // Start Screen
+            if (!gameStarted) {
+                return h('div', { className: 'min-h-screen flex items-center justify-center', style: { background: 'linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%)' } },
+                    h('div', { style: { textAlign: 'center', padding: '40px' } },
+                        h('h1', { style: { fontSize: '48px', fontWeight: 'bold', color: '#ff6b35', marginBottom: '10px', textShadow: '0 0 20px rgba(255,107,53,0.6)' } }, 'CRYPTO WARS'),
+                        h('p', { style: { color: '#aaa', marginBottom: '30px', fontSize: '18px' } }, '🔥 Molten Edition 🔥'),
+                        
+                        localStorage.getItem('cryptoWarsSave') ?
+                            h('button', { 
+                                onClick: loadGame,
+                                style: { padding: '15px 40px', fontSize: '18px', background: 'linear-gradient(135deg, #00b894, #00a884)', border: 'none', borderRadius: '12px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', marginBottom: '15px', display: 'block', width: '100%' }
+                            }, '📂 CONTINUE') : null,
+                        
+                        h('div', { style: { color: '#fff', fontSize: '20px', marginBottom: '15px' } }, 'Select Game Length:'),
+                        GAME_DAYS_OPTIONS.map(len => 
+                            h('button', { 
+                                key: len,
+                                onClick: () => startGame(len),
+                                style: { padding: '15px 30px', fontSize: '16px', background: 'linear-gradient(135deg, #ff6b35, #ff8c42)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: 'bold', cursor: 'pointer', margin: '5px' }
+                            }, `🔥 ${len} DAYS`)
+                        ),
+                        
+                        h('div', { style: { marginTop: '30px', color: '#666', fontSize: '14px' } }, 
+                            'Tap coins to trade • Events happen daily • Survive to the end!'
+                        )
+                    )
+                );
+            }
+            
             return h('div', { className: 'min-h-screen relative' },
                 // Header
                 h('div', { className: 'header' },
-                    h('div', { className: 'progress-ring', style: { '--progress': (day/GAME_DAYS*100) + '%' } },
-                        h('div', { className: 'progress-inner text-white' }, `${day}/${GAME_DAYS}`)
+                    h('div', { className: 'progress-ring', style: { '--progress': (day/gameLength*100) + '%' } },
+                        h('div', { className: 'progress-inner text-white' }, `${day}/${gameLength}`)
                     ),
                     h('div', null,
                         h('div', { className: 'text-lg font-bold text-neon-orange' }, 'CRYPTO WARS'),
                         h('div', { className: 'text-sm text-gray-400' }, `${currentExchange.name} • ${location.name}`)
                     ),
                     h('div', { className: 'ml-auto text-right' },
-                        h('div', { className: 'text-lg font-bold text-green-400' }, `$${cash.toFixed(0)}`),
+                        h('div', { className: 'text-lg font-bold text-green-400' }, `$${isNaN(cash) ? 0 : cash.toFixed(0)}`),
                         h('div', { className: 'text-xs text-gray-500' }, 'cash')
                     )
                 ),
@@ -480,11 +575,39 @@
                         )
                     ),
                     h('div', { className: 'wallet-holdings' },
-                        Object.entries(holdings).filter(([_, amt]) => amt > 0).map(([sym, amt]) => 
-                            h('div', { key: sym, className: 'wallet-coin', style: { color: CRYPTOS.find(c => c.symbol === sym)?.color } }, 
-                                `${amt.toFixed(2)} ${sym}`
-                            )
-                        ),
+                        Object.entries(holdings).filter(([_, amt]) => amt > 0).map(([sym, amt]) => {
+                            const crypto = CRYPTOS.find(c => c.symbol === sym);
+                            const color = crypto?.color || '#fff';
+                            const hex = color.replace('#', '');
+                            const r = parseInt(hex.substr(0, 2), 16);
+                            const g = parseInt(hex.substr(2, 2), 16);
+                            const b = parseInt(hex.substr(4, 2), 16);
+                            const isDark = (r * 0.299 + g * 0.587 + b * 0.114) < 128;
+                            const count = Object.keys(holdings).filter(k => holdings[k] > 0).length;
+                            const fontSize = count > 6 ? 9 : count > 4 ? 10 : 11;
+                            const padding = count > 6 ? '1px 3px' : count > 4 ? '1px 4px' : '2px 5px';
+                            
+                            return h('div', { 
+                                key: sym, 
+                                className: 'wallet-coin', 
+                                style: { 
+                                    color: isDark ? '#fff' : color,
+                                    background: isDark ? color : 'rgba(255,255,255,0.15)',
+                                    cursor: 'pointer',
+                                    border: isDark ? `1px solid ${color}` : 'none',
+                                    fontSize: fontSize + 'px',
+                                    padding: padding
+                                },
+                                onClick: () => {
+                                    const fee = currentExchange?.fee || 0.006;
+                                    const basePrice = prices?.[sym] || crypto?.price || 0;
+                                    const price = basePrice * (location?.multiplier || 1) * (1 - fee);
+                                    setTradeModal({ symbol: sym, type: 'sell', price, max: amt });
+                                    setTradeAmount(amt.toFixed(6));
+                                    setModal('trade');
+                                }
+                            }, `${amt.toFixed(2)} ${sym}`);
+                        }),
                         Object.keys(holdings).filter(k => holdings[k] > 0).length === 0 && 
                             h('div', { className: 'wallet-coin', style: { color: '#666' } }, 'Empty')
                     )
@@ -495,13 +618,14 @@
                     h('div', { className: 'bit-title' }, 'LOG'),
                     logs.slice(0, 8).map((log, i) => h('div', { key: i, className: 'bit-log-line' }, log)),
                     h('div', { className: 'bit-stats' },
-                        h('div', { style: { color: '#00ff88' } }, `CASH: $${cash.toFixed(0)}`),
+                        h('div', { style: { color: '#00ff88' } }, `CASH: $${isNaN(cash) ? 0 : cash.toFixed(0)}`),
                         h('div', { style: { color: defiDebt > 0 ? '#ff4488' : '#666' } }, defiDebt > 0 ? `DEBT: $${defiDebt.toFixed(0)}` : 'DEBT: $0')
                     )
                 ),
                 
                 // Bottom Toolbar
                 h('div', { className: 'bottom-toolbar' },
+                    h('div', { className: 'toolbar-btn', style: { background: '#333' }, onClick: saveGame }, 'SAVE'),
                     h('div', { className: 'toolbar-btn btn-travel', onClick: () => setModal('travel') }, 'TRAVEL'),
                     h('div', { className: 'toolbar-btn btn-upgrades', onClick: () => setModal('upgrades') }, 'UPGRADES'),
                     h('div', { className: 'toolbar-btn btn-day', onClick: advanceDay }, 'DAY'),
@@ -537,7 +661,7 @@
                                     onClick: () => {
                                         const fee = currentExchange.fee;
                                         const price = prices[tradeModal.symbol] * location.multiplier * (1 + fee);
-                                        setTradeModal({...tradeModal, type: 'buy', price, max: Math.max(0, Math.min(cash / price, getWalletCapacity() - getTotalCrypto()))});
+                                        setTradeModal({...tradeModal, type: 'buy', price, max: Math.max(0, Math.min((cash||0) / price, getWalletCapacity() - getTotalCrypto()))});
                                         setTradeAmount((cash / price).toFixed(6));
                                     },
                                     style: { 
@@ -556,7 +680,7 @@
                                         const fee = currentExchange.fee;
                                         const price = prices[tradeModal.symbol] * location.multiplier * (1 - fee);
                                         const owned = holdings[tradeModal.symbol];
-                                        setTradeModal({...tradeModal, type: 'sell', price, max: owned});
+                                        setTradeModal({...tradeModal, type: 'sell', price, max: owned || 0});
                                         setTradeAmount(owned.toFixed(6));
                                     },
                                     style: { 
@@ -760,16 +884,53 @@
                 
                 // Game Over Modal
                 modal === 'gameover' && h('div', { className: 'modal-overlay' },
-                    h('div', { className: 'modal-content game-over' },
-                        h('h1', null, '🔥 GAME OVER 🔥'),
-                        h('div', { className: 'stats' }, `Survived ${day} days`),
-                        h('div', { className: 'stats', style: { color: getNetWorth() >= 0 ? '#00ff88' : '#ff4488' } }, 
-                            `Net Worth: $${getNetWorth().toFixed(2)}`
+                    h('div', { className: 'modal-content game-over', style: { maxWidth: '360px', textAlign: 'center' } },
+                        h('h1', { style: { fontSize: '36px', color: '#ff6b35', marginBottom: '20px', textShadow: '0 0 20px rgba(255,107,53,0.6)' } }, '🔥 GAME OVER 🔥'),
+                        
+                        h('div', { style: { background: '#1a1a2e', borderRadius: '12px', padding: '20px', marginBottom: '20px' } },
+                            h('div', { style: { fontSize: '16px', color: '#aaa', marginBottom: '5px' } }, 'Days Survived'),
+                            h('div', { style: { fontSize: '32px', fontWeight: 'bold', color: '#fff' } }, `${day} / ${gameLength}`),
+                            
+                            h('div', { style: { marginTop: '15px', fontSize: '16px', color: '#aaa' } }, 'Final Net Worth'),
+                            h('div', { style: { fontSize: '36px', fontWeight: 'bold', color: getNetWorth() >= 0 ? '#00ff88' : '#ff4488' } }, 
+                                `$${getNetWorth().toFixed(2)}`
+                            ),
+                            
+                            h('div', { style: { marginTop: '15px', display: 'flex', justifyContent: 'space-between', fontSize: '14px' } },
+                                h('div', null, h('span', { style: { color: '#aaa' } }, 'Cash:'), h('span', { style: { color: '#00ff88' } }, ` $${cash.toFixed(0)}`)),
+                                h('div', null, h('span', { style: { color: '#aaa' } }, 'Debt:'), h('span', { style: { color: '#ff4488' } }, ` $${defiDebt.toFixed(0)}`))
+                            ),
+                            
+                            h('div', { style: { marginTop: '10px', fontSize: '14px', color: '#aaa' } }, 
+                                'Coins: ' + Object.values(holdings).reduce((a,b) => a+b, 0).toFixed(1)
+                            )
                         ),
-                        h('button', { 
-                            className: 'trade-btn btn-buy', 
-                            onClick: () => window.location.reload()
-                        }, '🔄 PLAY AGAIN')
+                        
+                        h('div', { style: { display: 'flex', gap: '10px' } },
+                            h('button', { 
+                                onClick: () => { setModal(null); setGameStarted(false); },
+                                style: { flex: 1, padding: '14px', background: '#333', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '🏠 MENU'),
+                            h('button', { 
+                                onClick: () => startGame(gameLength),
+                                style: { flex: 1, padding: '14px', background: 'linear-gradient(135deg, #ff6b35, #ff8c42)', border: 'none', borderRadius: '10px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '🔄 RETRY')
+                        ),
+                        
+                        h('div', { style: { marginTop: '15px', display: 'flex', gap: '10px' } },
+                            h('button', { 
+                                onClick: () => startGame(30),
+                                style: { flex: 1, padding: '10px', background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', color: '#aaa', fontSize: '12px', cursor: 'pointer' }
+                            }, '30 DAYS'),
+                            h('button', { 
+                                onClick: () => startGame(45),
+                                style: { flex: 1, padding: '10px', background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', color: '#aaa', fontSize: '12px', cursor: 'pointer' }
+                            }, '45 DAYS'),
+                            h('button', { 
+                                onClick: () => startGame(60),
+                                style: { flex: 1, padding: '10px', background: '#1a1a2e', border: '1px solid #333', borderRadius: '8px', color: '#aaa', fontSize: '12px', cursor: 'pointer' }
+                            }, '60 DAYS')
+                        )
                     )
                 )
             );
