@@ -112,16 +112,14 @@
             height: calc(100% - 140px);
             overflow-y: auto;
             padding-right: 5px;
-            display: flex;
-            flex-direction: column;
         }
         
         .bit-log div {
-            margin-bottom: 8px;
-            white-space: normal;
-            word-wrap: break-word;
-            line-height: 1.5;
-            font-size: 16px;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.4;
         }
         
         .bit-stats {
@@ -182,7 +180,7 @@
     <div id="root"></div>
 
     <script>
-        const { useState, useEffect, useRef, createElement: h } = React;
+        const { useState, useEffect, createElement: h } = React;
         
         // === CRYPTOCURRENCIES ===
         const CRYPTOS = {
@@ -252,14 +250,6 @@
             const [showModal, setShowModal] = useState(null);
             const [tradeModal, setTradeModal] = useState(null); // {symbol, type, price, max}
             const [tradeAmount, setTradeAmount] = useState('');
-            const logRef = useRef(null);
-            
-            // Auto-scroll log to top when new entries
-            useEffect(() => {
-                if (logRef.current) {
-                    logRef.current.scrollTop = 0;
-                }
-            }, [log]);
             const [walletCapacity, setWalletCapacity] = useState(100);
             const [defiDebt, setDefiDebt] = useState(0);
             const [defiLoans, setDefiLoans] = useState([]); // Track active loans
@@ -723,7 +713,7 @@
             // 8-bit terminal panel
             const renderBitPanel = () => h('div', { className: 'bit-panel' },
                 h('div', { className: 'bit-title' }, '◄ CRYPTO LOG ►'),
-                h('div', { className: 'bit-log', ref: logRef },
+                h('div', { className: 'bit-log' },
                     log.map((msg, i) => 
                         h('div', { key: i, style: { 
                             color: i === 0 ? '#00ff00' : i < 5 ? '#00cc00' : '#006600',
