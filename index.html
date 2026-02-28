@@ -244,21 +244,39 @@
                 return newPrices;
             };
             
-            // === RANDOM EVENTS ===
+            // === RANDOM EVENTS (30 EVENTS) ===
             const getRandomEvent = () => {
                 const events = [
-                    { text: '🐋 Whale moved the market!', effect: 'pump' },
-                    { text: '📢 Elon tweeted...', effect: 'pump' },
-                    { text: '🎓 SEC made a statement.', effect: 'crash' },
-                    { text: '🔥 Major hack revealed!', effect: 'crash' },
-                    { text: '🌊 Bull run!', effect: 'pump' },
-                    { text: '📉 Liquidation cascade!', effect: 'crash' },
-                    { text: '🎁 Airdrop received!', effect: 'airdrop' },
-                    { text: '💎 Diamond hands!', effect: 'pump' },
-                    { text: '🐕 Doge is pumping!', effect: 'doge' },
-                    { text: '🔌 Exchange outage!', effect: 'crash' },
-                    { text: '🏦 Fed announcement', effect: 'mixed' },
-                    { text: '🌍 Global markets rally', effect: 'pump' }
+                    { text: '🐋 WHALE DUMP - A whale sells everything!', effect: 'all', value: -0.30 },
+                    { text: '📢 ELON TWEETS - Elon mentions crypto!', effect: 'all', value: 0.20 },
+                    { text: '🎓 SEC CRACKDOWN - New regulations!', effect: 'all', value: -0.25 },
+                    { text: '🔥 HACK ALERT - Major exchange hacked!', effect: 'all', value: -0.35 },
+                    { text: '🌊 BULL RUN - Market is pumping!', effect: 'all', value: 0.40 },
+                    { text: '📉 BLOODBATH - Massive selloff!', effect: 'all', value: -0.40 },
+                    { text: '🎁 AIRDROP - Free tokens!', effect: 'cash', value: 500 },
+                    { text: '💎 DIAMOND HANDS - HODLers win!', effect: 'all', value: 0.15 },
+                    { text: '🐕 DOGE PUMP - Dogecoin parabolic!', effect: 'single', symbol: 'DOGE', value: 1.00 },
+                    { text: '🔌 EXCHANGE DOWN - Maintenance!', effect: 'random', value: 0.20 },
+                    { text: '🏦 FED RATE - Rate decision!', effect: 'random', value: 0.15 },
+                    { text: '🌍 GLOBAL RALLY - Markets up!', effect: 'all', value: 0.25 },
+                    { text: '💥 FLASH CRASH - Quick drop!', effect: 'flash', value: -0.30 },
+                    { text: '🎰 CASINO DAY - Gamble time!', effect: 'gamble', value: 0.50 },
+                    { text: '📱 INFLUENCER PUMP - Shilling a coin!', effect: 'random_coin', value: 0.35 },
+                    { text: '💸 STABLEGATE - Stablecoin chaos!', effect: 'all', value: 0.10 },
+                    { text: '🏄 DEFI SUMMER - Returns!', effect: 'all', value: 0.30 },
+                    { text: '❄️ WINTER IS COMING - Crypto winter!', effect: 'all', value: -0.45 },
+                    { text: '🌟 NEW TOKEN - Hot launch!', effect: 'newtoken', value: 0.50 },
+                    { text: '🚀 IPO NEWS - Exchange going public!', effect: 'all', value: 0.20 },
+                    { text: '😱 PANIC SELL - Everyone panic!', effect: 'all', value: -0.35 },
+                    { text: '🤝 MERGER - Two chains merge!', effect: 'all', value: 0.25 },
+                    { text: '🔮 VISION - You had a vision!', effect: 'doublecash', value: 2 },
+                    { text: '🎲 GAMBLE - Risk it all!', effect: 'gamble_all', value: 0.50 },
+                    { text: '📊 WHALE WHISPER - Insider tip!', effect: 'moon', value: 0.50 },
+                    { text: '🌦️ 4YEAR CYCLE - Cycle time!', effect: 'random', value: 0.30 },
+                    { text: '🎭 FUD SPREAD - Fear everywhere!', effect: 'all', value: -0.20 },
+                    { text: '💰 WHALE GIFT - Whale is generous!', effect: 'cash', value: 2000 },
+                    { text: '⚡ GAS WAR - High fees!', effect: 'fee', value: 3 },
+                    { text: '🎆 NEW YEAR - Bonus!', effect: 'cash', value: 100 }
                 ];
                 
                 const event = events[Math.floor(Math.random() * events.length)];
@@ -267,36 +285,115 @@
             
             const applyEvent = (event) => {
                 const newPrices = { ...prices };
+                const symbols = Object.keys(CRYPTOS);
                 
                 switch(event.effect) {
-                    case 'pump':
-                        Object.keys(newPrices).forEach(sym => {
-                            newPrices[sym] *= 1 + (Math.random() * 0.3 + 0.1);
+                    case 'all': // All coins
+                        symbols.forEach(sym => {
+                            newPrices[sym] *= (1 + event.value);
                         });
-                        addLog(`🔥 ${event.text} Prices up 10-40%!`);
+                        addLog(`📢 ${event.text} (${event.value > 0 ? '+' : ''}${(event.value * 100).toFixed(0)}%)`);
                         break;
-                    case 'crash':
-                        Object.keys(newPrices).forEach(sym => {
-                            newPrices[sym] *= 1 - (Math.random() * 0.25 + 0.1);
+                        
+                    case 'single': // Single coin (DOGE pump)
+                        if (event.symbol && newPrices[event.symbol]) {
+                            newPrices[event.symbol] *= (1 + event.value);
+                            addLog(`📢 ${event.text} ${event.symbol} +${(event.value * 100).toFixed(0)}%!`);
+                        }
+                        break;
+                        
+                    case 'random': // Random +/- 
+                        const dir = Math.random() > 0.5 ? 1 : -1;
+                        symbols.forEach(sym => {
+                            newPrices[sym] *= (1 + dir * event.value);
                         });
-                        addLog(`💀 ${event.text} Prices down 10-35%!`);
+                        addLog(`📢 ${event.text} (${dir > 0 ? '+' : '-'}${(event.value * 100).toFixed(0)}%)`);
                         break;
-                    case 'airdrop':
-                        const airdrop = Math.random() * 500 + 100;
-                        setCash(c => c + airdrop);
-                        addLog(`🎁 ${event.text} +$${airdrop.toFixed(0)}!`);
+                        
+                    case 'random_coin': // One random coin pumps
+                        const luckyCoin = symbols[Math.floor(Math.random() * symbols.length)];
+                        if (newPrices[luckyCoin]) {
+                            newPrices[luckyCoin] *= (1 + event.value);
+                            addLog(`📢 ${event.text} ${luckyCoin} +${(event.value * 100).toFixed(0)}%!`);
+                        }
                         break;
-                    case 'doge':
-                        if (newPrices.DOGE) newPrices.DOGE *= 2;
-                        addLog(`🐕 ${event.text} DOGE 2x!`);
+                        
+                    case 'newtoken': // New token launch - one random coin moons
+                        const newCoin = symbols[Math.floor(Math.random() * symbols.length)];
+                        if (newPrices[newCoin]) {
+                            newPrices[newCoin] *= (1 + event.value);
+                            addLog(`🌟 ${event.text} ${newCoin} moons +${(event.value * 100).toFixed(0)}%!`);
+                        }
                         break;
-                    case 'mixed':
-                        Object.keys(newPrices).forEach(sym => {
-                            newPrices[sym] *= 1 + (Math.random() - 0.5) * 0.3;
+                        
+                    case 'flash': // Flash crash then recover
+                        symbols.forEach(sym => {
+                            newPrices[sym] *= 0.7; // -30%
                         });
-                        addLog(`⚖️ ${event.text} Mixed movement!`);
+                        addLog(`💥 ${event.text} -30%!`);
+                        setTimeout(() => {
+                            const recoverPrices = {...prices};
+                            symbols.forEach(sym => {
+                                recoverPrices[sym] *= 1.15; // +15% recovery
+                            });
+                            setPrices(recoverPrices);
+                            addLog(`📈 Recovered +15%!`);
+                        }, 100);
                         break;
+                        
+                    case 'cash': // Free money
+                        setCash(c => c + event.value);
+                        addLog(`🎁 ${event.text} +$${event.value}!`);
+                        break;
+                        
+                    case 'doublecash': // Double your cash
+                        setCash(c => c * event.value);
+                        addLog(`🔮 ${event.text} Cash doubled!`);
+                        break;
+                        
+                    case 'gamble': // 50/50 gamble amount
+                        const gambleAmt = Math.min(cash * 0.5, 10000);
+                        if (Math.random() > 0.5) {
+                            setCash(c => c + gambleAmt);
+                            addLog(`🎲 ${event.text} Won $${gambleAmt.toFixed(0)}!`);
+                        } else {
+                            setCash(c => c - gambleAmt);
+                            addLog(`🎲 ${event.text} Lost $${gambleAmt.toFixed(0)}...`);
+                        }
+                        break;
+                        
+                    case 'gamble_all': // Risk it all!
+                        if (Math.random() > 0.5) {
+                            setCash(c => c * 2);
+                            addLog(`🎲 JACKPOT! Doubled everything!`);
+                        } else {
+                            setCash(c => c * 0.5);
+                            addLog(`🎲 Lost half...`);
+                        }
+                        break;
+                        
+                    case 'moon': // One coin will moon tomorrow
+                        const moonCoin = symbols[Math.floor(Math.random() * symbols.length)];
+                        if (newPrices[moonCoin]) {
+                            const bonus = newPrices[moonCoin] * event.value;
+                            newPrices[moonCoin] += bonus;
+                            addLog(`📊 ${event.text} ${moonCoin} tomorrow!`);
+                        }
+                        break;
+                        
+                    case 'fee': // High gas
+                        addLog(`⚡ ${event.text} - High network fees!`);
+                        break;
+                        
+                    default:
+                        addLog(`📢 ${event.text}`);
                 }
+                
+                // Clamp prices
+                symbols.forEach(sym => {
+                    newPrices[sym] = Math.max(CRYPTOS[sym].basePrice * 0.1, newPrices[sym]);
+                });
+                
                 setPrices(newPrices);
             };
             
