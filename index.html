@@ -37,7 +37,8 @@
         
         /* Wallet Display */
         .wallet-display { position: absolute; bottom: 50px; left: 0; right: 0; height: 100px; padding: 6px 10px; display: flex; flex-direction: column; background: linear-gradient(90deg, #2a1a3e 0%, #1a2a3e 100%); border-top: 3px solid #a29bfe; }
-        .wallet-title { font-size: 16px; color: #a29bfe; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+        .wallet-bar { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+        .wallet-bar-fill { height: 100%; background: linear-gradient(90deg, #a29bfe, #6c5ce7); border-radius: 4px; transition: width 0.3s; }
         .wallet-holdings { display: flex; gap: 8px; overflow-x: auto; }
         .wallet-coin { background: rgba(255,255,255,0.1); padding: 4px 10px; border-radius: 6px; font-size: 16px; white-space: nowrap; }
         
@@ -166,6 +167,7 @@
             const [location, setLocation] = useState(LOCATIONS[0]);
             const [currentExchange, setCurrentExchange] = useState(EXCHANGES[0]);
             const [defiDebt, setDefiDebt] = useState(0);
+            const [walletCapacity, setWalletCapacity] = useState(500);
             const [upgrades, setUpgrades] = useState({});
             const [logs, setLogs] = useState(['Day 1 started']);
             const [events, setEvents] = useState(['Welcome to Crypto Wars! Tap coins to trade.']);
@@ -232,14 +234,24 @@
             const handleCryptoClick = (crypto) => {
                 const fee = currentExchange.fee;
                 const price = (prices[crypto.symbol] || crypto.price) * location.multiplier * (1 + fee);
-                const maxBuy = cash / price;
-                setTradeModal({ symbol: crypto.symbol, type: 'buy', price, max: maxBuy });
+                const maxBuy = Math.min(cash / price, getWalletCapacity() - getTotalCrypto());
+                setTradeModal({ symbol: crypto.symbol, type: 'buy', price, max: Math.max(0, maxBuy) });
                 setTradeAmount(maxBuy.toFixed(6));
                 setModal('trade');
             };
             
             const handleTrade = (amount) => {
                 if (!tradeModal || !amount || amount <= 0) return;
+                
+                // Check wallet capacity for buys
+                if (tradeModal.type === 'buy') {
+                    const currentTotal = getTotalCrypto();
+                    if (currentTotal + amount > getWalletCapacity()) {
+                        addLog(`❌ Wallet full! Need space for ${amount.toFixed(4)} more`);
+                        return;
+                    }
+                }
+                
                 const price = tradeModal.type === 'buy' 
                     ? prices[tradeModal.symbol] * location.multiplier * (1 + currentExchange.fee)
                     : prices[tradeModal.symbol] * location.multiplier * (1 - currentExchange.fee);
@@ -317,6 +329,20 @@
                 return cash + cryptoValue - defiDebt;
             };
             
+            const getTotalCrypto = () => {
+                return Object.values(holdings).reduce((sum, qty) => sum + qty, 0);
+            };
+            
+            const getWalletCapacity = () => {
+                return walletCapacity + (upgrades.wallet || 0) * 5;
+            };
+            
+            const getWalletProgress = () => {
+                const total = getTotalCrypto();
+                const max = getWalletCapacity();
+                return Math.min((total / max) * 100, 100);
+            };
+            
             // Render
             return h('div', { className: 'min-h-screen relative' },
                 // Header
@@ -358,7 +384,15 @@
                 
                 // Wallet Holdings
                 h('div', { className: 'wallet-display' },
-                    h('div', { className: 'wallet-title' }, 'WALLET HOLDINGS'),
+                    h('div', { style: { marginBottom: '6px' } },
+                        h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+                            h('div', { className: 'wallet-title', style: { margin: 0 } }, 'WALLET'),
+                            h('div', { style: { color: '#a29bfe', fontSize: '12px', fontWeight: 'bold' } }, `${getTotalCrypto()}/${getWalletCapacity()}`)
+                        ),
+                        h('div', { className: 'wallet-bar' },
+                            h('div', { className: 'wallet-bar-fill', style: { width: getWalletProgress() + '%' } })
+                        )
+                    ),
                     h('div', { className: 'wallet-holdings' },
                         Object.entries(holdings).filter(([_, amt]) => amt > 0).map(([sym, amt]) => 
                             h('div', { key: sym, className: 'wallet-coin', style: { color: CRYPTOS.find(c => c.symbol === sym)?.color } }, 
@@ -417,7 +451,7 @@
                                     onClick: () => {
                                         const fee = currentExchange.fee;
                                         const price = prices[tradeModal.symbol] * location.multiplier * (1 + fee);
-                                        setTradeModal({...tradeModal, type: 'buy', price, max: cash / price});
+                                        setTradeModal({...tradeModal, type: 'buy', price, max: Math.max(0, Math.min(cash / price, getWalletCapacity() - getTotalCrypto()))});
                                         setTradeAmount((cash / price).toFixed(6));
                                     },
                                     style: { 
@@ -616,7 +650,7 @@
                 
                 // Exchange Modal
                 modal === 'exchange' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
-                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation() },
+                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation(), style: { maxHeight: '80vh', overflow: 'auto' } },
                         h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
                         h('div', { className: 'modal-title' }, '💱 SELECT EXCHANGE'),
                         h('div', { style: { textAlign: 'center', marginBottom: '15px', color: '#aaa', fontSize: '14px' } },
