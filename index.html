@@ -113,7 +113,7 @@
             { symbol: 'ATOM', name: 'Cosmos', icon: '⚛', color: '#2e3148', price: 9 }
         ];
         
-        const EXCHANGES = [
+        const LOCATIONS = [
             { name: 'New York', multiplier: 1.0 },
             { name: 'Tokyo', multiplier: 1.1 },
             { name: 'London', multiplier: 1.05 },
@@ -122,6 +122,15 @@
             { name: 'Hong Kong', multiplier: 1.12 },
             { name: 'Berlin', multiplier: 0.95 },
             { name: 'Sao Paulo', multiplier: 0.9 }
+        ];
+        
+        const EXCHANGES = [
+            { name: 'Coinbase', fee: 0.006, risk: 0.1, description: 'Reliable & regulated', color: '#0052ff' },
+            { name: 'Binance', fee: 0.004, risk: 0.15, description: 'Low fees, high liquidity', color: '#f0b90b' },
+            { name: 'Kraken', fee: 0.005, risk: 0.08, description: 'Best security', color: '#5741d9' },
+            { name: 'KuCoin', fee: 0.004, risk: 0.12, description: 'Altcoin heaven', color: '#23af91' },
+            { name: 'Gemini', fee: 0.007, risk: 0.05, description: 'Trustworthy & easy', color: '#00dccd' },
+            { name: 'DEX', fee: 0.008, risk: 0.25, description: 'No KYC, max privacy', color: '#ff6b35' }
         ];
         
         const UPGRADES = {
@@ -154,15 +163,16 @@
             const [cash, setCash] = useState(5000);
             const [holdings, setHoldings] = useState({});
             const [prices, setPrices] = useState({});
-            const [location, setLocation] = useState(EXCHANGES[0]);
+            const [location, setLocation] = useState(LOCATIONS[0]);
+            const [currentExchange, setCurrentExchange] = useState(EXCHANGES[0]);
             const [defiDebt, setDefiDebt] = useState(0);
             const [upgrades, setUpgrades] = useState({});
             const [logs, setLogs] = useState(['Day 1 started']);
             const [events, setEvents] = useState(['Welcome to Crypto Wars! Tap coins to trade.']);
             const [gameOver, setGameOver] = useState(false);
             const [modal, setModal] = useState(null); // 'trade', 'travel', 'upgrades', 'defi', 'gameover'
-            const [tradeCrypto, setTradeCrypto] = useState(null);
-            const [tradeType, setTradeType] = useState('buy');
+            const [tradeModal, setTradeModal] = useState(null);
+            const [tradeAmount, setTradeAmount] = useState('0');
             
             // Initialize prices
             useEffect(() => {
@@ -220,36 +230,42 @@
             };
             
             const handleCryptoClick = (crypto) => {
-                setTradeCrypto(crypto);
-                setTradeType('buy');
+                const fee = currentExchange.fee;
+                const price = (prices[crypto.symbol] || crypto.price) * location.multiplier * (1 + fee);
+                const maxBuy = cash / price;
+                setTradeModal({ symbol: crypto.symbol, type: 'buy', price, max: maxBuy });
+                setTradeAmount(maxBuy.toFixed(6));
                 setModal('trade');
             };
             
             const handleTrade = (amount) => {
-                if (!tradeCrypto) return;
-                const price = prices[tradeCrypto.symbol] * location.multiplier;
+                if (!tradeModal || !amount || amount <= 0) return;
+                const price = tradeModal.type === 'buy' 
+                    ? prices[tradeModal.symbol] * location.multiplier * (1 + currentExchange.fee)
+                    : prices[tradeModal.symbol] * location.multiplier * (1 - currentExchange.fee);
                 
-                if (tradeType === 'buy') {
+                if (tradeModal.type === 'buy') {
                     const cost = amount * price;
                     if (cost > cash) {
                         addLog(`❌ Not enough cash! Need $${cost.toFixed(2)}`);
                         return;
                     }
                     setCash(c => c - cost);
-                    setHoldings(h => ({ ...h, [tradeCrypto.symbol]: (h[tradeCrypto.symbol] || 0) + amount }));
-                    addLog(`✅ Bought ${amount} ${tradeCrypto.symbol} for $${cost.toFixed(2)}`);
+                    setHoldings(h => ({ ...h, [tradeModal.symbol]: (h[tradeModal.symbol] || 0) + amount }));
+                    addLog(`✅ Bought ${amount.toFixed(4)} ${tradeModal.symbol} for $${cost.toFixed(2)}`);
                 } else {
-                    const owned = holdings[tradeCrypto.symbol] || 0;
+                    const owned = holdings[tradeModal.symbol] || 0;
                     if (amount > owned) {
-                        addLog(`❌ Not enough ${tradeCrypto.symbol}!`);
+                        addLog(`❌ Not enough ${tradeModal.symbol}!`);
                         return;
                     }
                     const revenue = amount * price;
                     setCash(c => c + revenue);
-                    setHoldings(h => ({ ...h, [tradeCrypto.symbol]: owned - amount }));
-                    addLog(`✅ Sold ${amount} ${tradeCrypto.symbol} for $${revenue.toFixed(2)}`);
+                    setHoldings(h => ({ ...h, [tradeModal.symbol]: owned - amount }));
+                    addLog(`✅ Sold ${amount.toFixed(4)} ${tradeModal.symbol} for $${revenue.toFixed(2)}`);
                 }
                 setModal(null);
+                setTradeAmount('0');
             };
             
             const handleTravel = (loc) => {
@@ -296,7 +312,7 @@
             const getNetWorth = () => {
                 let cryptoValue = 0;
                 Object.entries(holdings).forEach(([sym, amt]) => {
-                    cryptoValue += amt * (prices[sym] || 0) * location.multiplier;
+                    cryptoValue += amt * (prices[sym] || 0) * location.multiplier * (1 + currentExchange.fee);
                 });
                 return cash + cryptoValue - defiDebt;
             };
@@ -310,7 +326,7 @@
                     ),
                     h('div', null,
                         h('div', { className: 'text-lg font-bold text-neon-orange' }, 'CRYPTO WARS'),
-                        h('div', { className: 'text-sm text-gray-400' }, location.name)
+                        h('div', { className: 'text-sm text-gray-400' }, `${currentExchange.name} • ${location.name}`)
                     ),
                     h('div', { className: 'ml-auto text-right' },
                         h('div', { className: 'text-lg font-bold text-green-400' }, `$${cash.toFixed(0)}`),
@@ -322,7 +338,7 @@
                 h('div', { className: 'crypto-area' },
                     h('div', { className: 'crypto-grid' },
                         CRYPTOS.map(crypto => {
-                            const price = (prices[crypto.symbol] || crypto.price) * location.multiplier;
+                            const price = (prices[crypto.symbol] || crypto.price) * location.multiplier * (1 + currentExchange.fee);
                             const change = ((price - crypto.price) / crypto.price * 100).toFixed(1);
                             return h('div', { key: crypto.symbol, className: 'crypto-card', onClick: () => handleCryptoClick(crypto) },
                                 h('div', { className: 'coin-icon', style: { background: crypto.color, color: '#fff' } }, crypto.icon),
@@ -370,30 +386,136 @@
                     h('div', { className: 'toolbar-btn btn-upgrades', onClick: () => setModal('upgrades') }, 'UPGRADES'),
                     h('div', { className: 'toolbar-btn btn-day', onClick: advanceDay }, 'DAY'),
                     h('div', { className: 'toolbar-btn btn-defi', onClick: () => setModal('defi') }, 'DEFI'),
-                    h('div', { className: 'toolbar-btn btn-exchange', onClick: () => setModal('trade') }, 'EXCHANGE')
+                    h('div', { className: 'toolbar-btn btn-exchange', onClick: () => setModal('exchange') }, 'EXCHANGE')
                 ),
                 
-                // === MODALS ===
-                
                 // Trade Modal
-                modal === 'trade' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
-                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation() },
-                        h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
-                        h('div', { className: 'modal-title' }, tradeType === 'buy' ? '💰 BUY CRYPTO' : '💸 SELL CRYPTO'),
-                        tradeCrypto && h('div', { style: { textAlign: 'center', marginBottom: '15px' } },
-                            h('div', { style: { fontSize: '24px', fontWeight: 'bold', color: tradeCrypto.color }, }, tradeCrypto.symbol),
-                            h('div', { style: { color: '#aaa' } }, `$${((prices[tradeCrypto.symbol] || tradeCrypto.price) * location.multiplier).toFixed(2)}`)
+                modal === 'trade' && tradeModal && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
+                    h('div', { 
+                        className: 'modal-content',
+                        style: { 
+                            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+                            border: `2px solid ${tradeModal.type === 'buy' ? '#00ff88' : '#ff0080'}`
+                        },
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' } },
+                            h('div', { style: { display: 'flex', alignItems: 'center', gap: '12px' } },
+                                h('span', { style: { fontSize: '32px' }, }, CRYPTOS.find(c => c.symbol === tradeModal.symbol).icon),
+                                h('div', null,
+                                    h('h2', { style: { fontSize: '24px', fontWeight: 'bold' } }, tradeModal.symbol),
+                                    h('p', { style: { fontSize: '14px', color: '#aaa' } }, '$' + tradeModal.price.toFixed(2))
+                                )
+                            ),
+                            h('button', { onClick: () => setModal(null), style: { fontSize: '24px', background: 'none', border: 'none', color: '#666', cursor: 'pointer' } }, '×')
                         ),
-                        h('div', { style: { display: 'flex', justifyContent: 'center', marginBottom: '15px' } },
-                            h('button', { className: 'trade-btn btn-buy', onClick: () => setTradeType('buy') }, 'BUY'),
-                            h('button', { className: 'trade-btn btn-sell', onClick: () => setTradeType('sell') }, 'SELL')
+                        
+                        // BUY/SELL toggle
+                        (holdings[tradeModal.symbol] || 0) > 0 ? 
+                            h('div', { style: { display: 'flex', gap: '8px', marginBottom: '16px' } },
+                                h('button', { 
+                                    onClick: () => {
+                                        const fee = currentExchange.fee;
+                                        const price = prices[tradeModal.symbol] * location.multiplier * (1 + fee);
+                                        setTradeModal({...tradeModal, type: 'buy', price, max: cash / price});
+                                        setTradeAmount((cash / price).toFixed(6));
+                                    },
+                                    style: { 
+                                        flex: 1, 
+                                        padding: '12px', 
+                                        borderRadius: '8px', 
+                                        background: tradeModal.type === 'buy' ? '#00ff88' : '#333', 
+                                        color: tradeModal.type === 'buy' ? '#000' : '#fff',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }
+                                }, 'BUY'),
+                                h('button', { 
+                                    onClick: () => {
+                                        const fee = currentExchange.fee;
+                                        const price = prices[tradeModal.symbol] * location.multiplier * (1 - fee);
+                                        const owned = holdings[tradeModal.symbol];
+                                        setTradeModal({...tradeModal, type: 'sell', price, max: owned});
+                                        setTradeAmount(owned.toFixed(6));
+                                    },
+                                    style: { 
+                                        flex: 1, 
+                                        padding: '12px', 
+                                        borderRadius: '8px', 
+                                        background: tradeModal.type === 'sell' ? '#ff0080' : '#333', 
+                                        color: '#fff',
+                                        fontWeight: 'bold',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }
+                                }, 'SELL')
+                            ) : null,
+                        
+                        h('div', { style: { background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px', marginBottom: '12px' } },
+                            h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '14px' } },
+                                h('span', { style: { color: '#aaa' } }, 'Fee:'),
+                                h('span', { style: { color: '#ff6b35' } }, (currentExchange.fee * 100).toFixed(1) + '%')
+                            ),
+                            (holdings[tradeModal.symbol] || 0) > 0 && h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginTop: '4px' } },
+                                h('span', { style: { color: '#aaa' } }, 'Owned:'),
+                                h('span', { style: { color: '#fff' } }, (holdings[tradeModal.symbol] || 0).toFixed(4))
+                            )
                         ),
-                        tradeType === 'buy' ? 
-                            h('button', { className: 'trade-btn btn-buy', style: { width: '100%' }, onClick: () => handleTrade(1) }, 
-                                `Buy 1 ($${((prices[tradeCrypto?.symbol] || 0) * location.multiplier).toFixed(0)})`)
-                        :
-                            h('button', { className: 'trade-btn btn-sell', style: { width: '100%' }, onClick: () => handleTrade(holdings[tradeCrypto?.symbol] || 0) }, 
-                                `Sell All (${(holdings[tradeCrypto?.symbol] || 0).toFixed(2)})`)
+                        h('input', {
+                            type: 'number',
+                            value: tradeAmount,
+                            onChange: (e) => setTradeAmount(e.target.value),
+                            style: { 
+                                width: '100%', 
+                                padding: '16px', 
+                                background: 'rgba(0,0,0,0.5)', 
+                                border: '2px solid #333', 
+                                borderRadius: '12px', 
+                                color: '#fff', 
+                                fontSize: '20px',
+                                fontWeight: 'bold',
+                                marginBottom: '12px'
+                            },
+                            placeholder: '0.00',
+                            step: 'any'
+                        }),
+                        h('div', { style: { display: 'flex', gap: '8px', marginBottom: '16px' } },
+                            h('button', { 
+                                onClick: () => setTradeAmount(tradeModal.max.toFixed(6)),
+                                style: { flex: 1, padding: '10px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, 'MAX'),
+                            h('button', { 
+                                onClick: () => setTradeAmount((tradeModal.max * 0.5).toFixed(6)),
+                                style: { flex: 1, padding: '10px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '50%'),
+                            h('button', { 
+                                onClick: () => setTradeAmount((tradeModal.max * 0.25).toFixed(6)),
+                                style: { flex: 1, padding: '10px', background: '#333', border: 'none', borderRadius: '8px', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }
+                            }, '25%')
+                        ),
+                        h('div', { style: { background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '12px', marginBottom: '16px' } },
+                            h('div', { style: { display: 'flex', justifyContent: 'space-between' } },
+                                h('span', { style: { color: '#aaa' } }, 'Total:'),
+                                h('span', { style: { fontSize: '20px', fontWeight: 'bold', color: tradeModal.type === 'buy' ? '#ff0080' : '#00ff88' } }, 
+                                    '$' + (parseFloat(tradeAmount || 0) * tradeModal.price).toFixed(2)
+                                )
+                            )
+                        ),
+                        h('button', {
+                            onClick: () => handleTrade(parseFloat(tradeAmount)),
+                            style: { 
+                                width: '100%', 
+                                padding: '16px', 
+                                background: tradeModal.type === 'buy' ? 'linear-gradient(135deg, #00ff88, #00cc66)' : 'linear-gradient(135deg, #ff0080, #cc0066)',
+                                border: 'none', 
+                                borderRadius: '12px', 
+                                color: '#000', 
+                                fontSize: '18px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }
+                        }, tradeModal.type === 'buy' ? '🚀 BUY ' + tradeModal.symbol : '💰 SELL ' + tradeModal.symbol)
                     )
                 ),
                 
@@ -403,7 +525,7 @@
                         h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
                         h('div', { className: 'modal-title' }, '✈️ TRAVEL TO...'),
                         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' } },
-                            EXCHANGES.map(loc => 
+                            LOCATIONS.map(loc => 
                                 h('div', { 
                                     key: loc.name,
                                     onClick: () => handleTravel(loc),
@@ -488,6 +610,33 @@
                                 onClick: handleDefiPay,
                                 disabled: defiDebt <= 0
                             }, '💰 PAY OFF')
+                        )
+                    )
+                ),
+                
+                // Exchange Modal
+                modal === 'exchange' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
+                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation() },
+                        h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
+                        h('div', { className: 'modal-title' }, '💱 SELECT EXCHANGE'),
+                        h('div', { style: { textAlign: 'center', marginBottom: '15px', color: '#aaa', fontSize: '14px' } },
+                            `Current: ${currentExchange.name} (${currentExchange.fee * 100}% fee)`
+                        ),
+                        EXCHANGES.map(ex => 
+                            h('div', { 
+                                key: ex.name,
+                                onClick: () => { setCurrentExchange(ex); addLog(`Switched to ${ex.name}`); setModal(null); },
+                                style: { 
+                                    padding: '12px', 
+                                    background: currentExchange.name === ex.name ? '#ff6b35' : '#1a1a2e',
+                                    borderRadius: '8px',
+                                    marginBottom: '8px',
+                                    cursor: 'pointer'
+                                }
+                            },
+                                h('div', { style: { fontWeight: 'bold', color: ex.color } }, ex.name),
+                                h('div', { style: { fontSize: '12px', color: '#aaa' } }, `${ex.fee * 100}% fee • ${ex.description}`)
+                            )
                         )
                     )
                 ),
