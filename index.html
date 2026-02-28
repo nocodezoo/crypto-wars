@@ -790,6 +790,12 @@
                             className: 'flex-1 py-1 text-xs bg-green-600 text-white font-bold rounded'
                         }, '🤑 ALL')
                     ),
+                            }, '🦈 Pay DeFi') :
+                            h('button', { 
+                                onClick: getDefiLoan,
+                                className: 'py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-500'
+                            }, '🦈 DeFi Loan')
+                    ),
                     
                     // TIKTOK-STYLE BOTTOM NAV
                     h('div', { 
