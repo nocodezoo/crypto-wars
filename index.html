@@ -61,8 +61,8 @@
         .crypto-btn {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1rem;
+            border-radius: 0.4rem;
+            padding: 0.25rem;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -116,9 +116,8 @@
         
         .bit-log div {
             margin-bottom: 6px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal;
+            word-wrap: break-word;
             line-height: 1.4;
         }
         
@@ -711,7 +710,7 @@
                 )
             );
             
-            return h('div', { className: 'min-h-screen pl-48 p-4 md:pl-56 md:p-6' },
+            return h('div', { className: 'min-h-screen pl-48 p-2 pb-24 md:pl-56 md:p-4 md:pb-28' },
                 renderBitPanel(),
                 h('div', { className: 'max-w-5xl mx-auto' },
                     // HEADER
@@ -726,36 +725,14 @@
                         )
                     ),
                     
-                    // STATS
-                    h('div', { className: 'grid grid-cols-2 md:grid-cols-5 gap-2 mb-5' },
-                        h('div', { className: 'card text-center py-2' }, 
-                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Cash'), 
-                            h('p', { className: 'text-sm font-bold mono', style: { color: 'var(--success)' } }, '$' + cash.toFixed(0))
-                        ),
-                        h('div', { className: 'card text-center py-2' }, 
-                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Loan Shark'), 
-                            h('p', { className: 'text-sm font-bold mono', style: { color: debt > INITIAL_DEBT ? 'var(--danger)' : 'var(--warning)' } }, '$' + debt.toFixed(0))
-                        ),
-                        h('div', { className: 'card text-center py-2' }, 
-                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, '🦈 DeFi'), 
-                            h('p', { className: 'text-sm font-bold mono', style: { color: defiDebt > 0 ? '#aa44ff' : 'var(--text-muted)' } }, '$' + defiDebt.toFixed(0))
-                        ),
-                        h('div', { className: 'card text-center py-2' }, 
-                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Portfolio'), 
-                            h('p', { className: 'text-sm font-bold mono' }, '$' + getPortfolioValue().toFixed(0))
-                        ),
-                        h('div', { className: 'card text-center py-2' }, 
-                            h('p', { className: 'text-xs uppercase', style: { color: 'var(--text-muted)' } }, 'Net Worth'), 
-                            h('p', { className: 'text-sm font-bold mono', style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, '$' + netWorth.toFixed(0))
+                    // STATS - compact row
+                    h('div', { className: 'flex justify-between items-center mb-3 gap-1' },
+                        h('div', { className: 'flex items-center gap-1' },
+                            h('span', { className: 'text-xs font-bold', style: { color: 'var(--text-muted)' } }, 'D' + day + '/30'),
+                            h('span', { className: 'text-xs', style: { color: '#00ff00' } }, ' $' + cash.toFixed(0)),
+                            h('span', { className: 'text-xs', style: { color: 'var(--danger)' } }, ' $' + debt.toFixed(0)),
+                            h('span', { className: 'text-xs font-bold', style: { color: netWorth >= 0 ? 'var(--success)' : 'var(--danger)' } }, ' $' + netWorth.toFixed(0))
                         )
-                    ),
-                    
-                    // QUICK ACTIONS
-                    h('div', { className: 'flex gap-2 mb-5 overflow-x-auto flex-wrap' },
-                        h('button', { onClick: () => setShowModal('travel'), className: 'px-4 py-2 bg-gray-800 rounded-lg font-bold text-sm' }, '✈️ Travel'),
-                        h('button', { onClick: () => setShowModal('upgrades'), className: 'px-4 py-2 bg-purple-600 rounded-lg font-bold text-sm' }, '🔧 Upgrades'),
-                        h('button', { onClick: () => setShowModal('exchange'), className: 'px-4 py-2 bg-gray-700 rounded-lg font-bold text-sm' }, currentExchange.name),
-                        h('button', { onClick: () => setShowModal('portfolio'), className: 'px-4 py-2 bg-gray-700 rounded-lg font-bold text-sm' }, '📊 Portfolio')
                     ),
                     
                     // MARKET
@@ -767,7 +744,7 @@
                                 className: 'px-3 py-1 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-500'
                             }, '🤑 Buy All')
                         ),
-                        h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-3' },
+                        h('div', { className: 'grid grid-cols-3 md:grid-cols-4 gap-2' },
                             Object.entries(CRYPTOS).map(([symbol, info]) => {
                                 const price = prices[symbol];
                                 const basePrice = info.basePrice;
@@ -789,24 +766,30 @@
                         )
                     ),
                     
-                    // ACTIONS
-                    h('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-2 mb-5' },
+                    // ACTIONS - compact row
+                    h('div', { className: 'flex gap-1 mb-2' },
                         h('button', { 
                             onClick: nextDay,
-                            className: 'py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl lava-glow pulsing'
-                        }, '⏭ Next Day'),
+                            className: 'flex-1 py-1 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded'
+                        }, '⏭ DAY'),
                         h('button', { 
                             onClick: payDebt,
-                            className: 'py-3 bg-blue-600 text-white font-bold rounded-xl'
-                        }, '💳 Pay Debt'),
-                        h('button', { 
-                            onClick: buyAll,
-                            className: 'py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-500'
-                        }, '🤑 Buy All'),
+                            className: 'flex-1 py-1 text-xs bg-blue-600 text-white font-bold rounded'
+                        }, '💳 DEBT'),
                         defiDebt > 0 ? 
                             h('button', { 
                                 onClick: payDefiDebt,
-                                className: 'py-3 bg-purple-600 text-white font-bold rounded-xl'
+                                className: 'flex-1 py-1 text-xs bg-purple-600 text-white font-bold rounded'
+                            }, '🦈 PAY') :
+                            h('button', { 
+                                onClick: getDefiLoan,
+                                className: 'flex-1 py-1 text-xs bg-purple-600 text-white font-bold rounded'
+                            }, '🦈 LOAN'),
+                        h('button', { 
+                            onClick: buyAll,
+                            className: 'flex-1 py-1 text-xs bg-green-600 text-white font-bold rounded'
+                        }, '🤑 ALL')
+                    ),
                             }, '🦈 Pay DeFi') :
                             h('button', { 
                                 onClick: getDefiLoan,
@@ -814,13 +797,42 @@
                             }, '🦈 DeFi Loan')
                     ),
                     
-                    // LOG
-                    h('div', { className: 'card' },
-                        h('h3', { className: 'font-bold mb-2' }, '📜 Activity'),
-                        h('div', { className: 'space-y-1 max-h-40 overflow-y-auto' },
-                            log.map((msg, i) => 
-                                h('p', { key: i, className: 'text-sm mono', style: { color: i === 0 ? 'var(--text)' : 'var(--text-muted)' } }, msg)
-                            )
+                    // TIKTOK-STYLE BOTTOM NAV
+                    h('div', { 
+                        className: 'fixed bottom-0 left-0 right-0 flex justify-around items-center py-3 px-2',
+                        style: { 
+                            background: 'rgba(10,10,18,0.95)', 
+                            borderTop: '1px solid rgba(255,107,53,0.3)',
+                            paddingBottom: 'max(12px, env(safe-area-inset-bottom))'
+                        }
+                    },
+                        h('button', { onClick: () => setShowModal('travel'), className: 'flex flex-col items-center gap-1' },
+                            h('span', { className: 'text-2xl' }, '✈️'),
+                            h('span', { className: 'text-xs text-gray-400' }, 'Travel')
+                        ),
+                        h('button', { onClick: () => setShowModal('upgrades'), className: 'flex flex-col items-center gap-1' },
+                            h('span', { className: 'text-2xl' }, '🔧'),
+                            h('span', { className: 'text-xs text-gray-400' }, 'Upgrades')
+                        ),
+                        h('button', { onClick: nextDay, className: 'flex flex-col items-center gap-1' },
+                            h('span', { className: 'text-3xl' }, '⏭️'),
+                            h('span', { className: 'text-xs text-gray-400' }, 'Day')
+                        ),
+                        h('button', { onClick: () => setShowModal('exchange'), className: 'flex flex-col items-center gap-1' },
+                            h('span', { className: 'text-2xl' }, '🏦'),
+                            h('span', { className: 'text-xs text-gray-400' }, 'Exchange')
+                        ),
+                        h('button', { onClick: () => setShowModal('portfolio'), className: 'flex flex-col items-center gap-1' },
+                            h('span', { className: 'text-2xl' }, '📊'),
+                            h('span', { className: 'text-xs text-gray-400' }, 'Portfolio')
+                        )
+                    ),
+                    
+                    // LOG - visible without scroll
+                    h('div', { className: 'text-xs mb-2' },
+                        h('span', { className: 'font-bold text-green-400' }, 'LOG: '),
+                        log.slice(0, 3).map((msg, i) => 
+                            h('span', { key: i, className: 'mr-2', style: { color: i === 0 ? '#00ff00' : '#888' } }, '>' + msg.substring(0, 20))
                         )
                     ),
                     
