@@ -66,7 +66,7 @@
         .toolbar-btn { padding: 8px 12px; border-radius: 8px; font-weight: 800; font-size: 9px; text-align: center; min-width: 50px; cursor: pointer; }
         .btn-travel { background: linear-gradient(135deg, #00b894, #00a884); color: #fff; box-shadow: 0 0 10px rgba(0,184,148,0.5); }
         .btn-upgrades { background: linear-gradient(135deg, #fdcb6e, #f39c12); color: #000; box-shadow: 0 0 10px rgba(253,203,110,0.5); }
-        .btn-day { background: linear-gradient(135deg, #ff6b35, #ff8c42); color: #fff; box-shadow: 0 0 10px rgba(255,107,53,0.6); }
+        .btn-day { background: linear-gradient(135deg, #ff6b35, #ff8c42); color: #fff; box-shadow: 0 0 10px rgba(255,107,53,0.6); animation: pulse-glow 2s infinite; }
         .btn-exchange { background: linear-gradient(135deg, #74b9ff, #0984e3); color: #fff; box-shadow: 0 0 10px rgba(116,185,255,0.5); }
         .btn-defi { background: linear-gradient(135deg, #fd79a8, #e84393); color: #fff; box-shadow: 0 0 10px rgba(253,121,168,0.5); }
         
@@ -88,6 +88,34 @@
         .btn-sell { background: linear-gradient(135deg, #ff4488, #cc2255); color: #fff; }
         
         .text-neon-orange { color: #ff6b35; text-shadow: 0 0 12px rgba(255,107,53,0.6); }
+        
+        /* Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,107,53,0.4); }
+            50% { box-shadow: 0 0 25px rgba(255,107,53,0.8), 0 0 40px rgba(255,140,66,0.4); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        @keyframes flash-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes flash-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .animate-pulse-glow { animation: pulse-glow 2s infinite; }
+        .animate-shake { animation: shake 0.3s ease-in-out; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .event-flash-green { animation: flash-green 0.5s ease-out; }
+        .event-flash-red { animation: flash-red 0.5s ease-out; }
     </style>
 </head>
 <body>
@@ -135,14 +163,14 @@
         ];
         
         const UPGRADES = {
-            whaleAlert: { name: 'Whale Alert', desc: 'See large trades', cost: 500 },
-            diamondHands: { name: 'Diamond Hands', desc: '-20% sell pressure', cost: 1000 },
-            fomoShield: { name: 'FOMO Shield', desc: '-30% event impact', cost: 800 },
-            luckyCoin: { name: 'Lucky Coin', desc: '+10% gain chance', cost: 1500 },
-            hodlMaster: { name: 'HODL Master', desc: 'Free daily hold', cost: 2000 },
-            paperHands: { name: 'Paper Hands', desc: '+50% sell speed', cost: 600 },
-            insider: { name: 'Insider Trading', desc: '+5% random bonus', cost: 2500 },
-            liquidity: { name: 'Liquidity Boost', desc: 'Lower slippage', cost: 1200 }
+            wallet: { name: 'Wallet+', desc: '+500 capacity', cost: 1000, effect: 'capacity', value: 500 },
+            whaleAlert: { name: 'Whale Alert', desc: 'See whale trades', cost: 500, effect: 'whale', value: 1 },
+            diamondHands: { name: 'Diamond Hands', desc: 'Reduce sell tax', cost: 800, effect: 'diamond', value: 0.1 },
+            fomoShield: { name: 'FOMO Shield', desc: 'Less event impact', cost: 600, effect: 'fomo', value: 0.3 },
+            luckyCoin: { name: 'Lucky Coin', desc: 'Better events', cost: 1200, effect: 'lucky', value: 0.15 },
+            hodlMaster: { name: 'HODL Master', desc: 'Daily bonus', cost: 1500, effect: 'hodl', value: 100 },
+            paperHands: { name: 'Paper Hands', desc: 'Faster selling', cost: 400, effect: 'paper', value: 0.25 },
+            insider: { name: 'Insider', desc: 'Price boost', cost: 2000, effect: 'insider', value: 0.05 }
         };
         
         const EVENTS = [
@@ -155,7 +183,38 @@
             { text: '💰 AIRDROP - Free tokens!', effect: 'cash', value: 500 },
             { text: '💎 DIAMOND HANDS - HODL!', effect: 'all', value: 0.15 },
             { text: '🐕 DOGE PUMP - Much wow!', effect: 'single', target: 'DOGE', value: 0.50 },
-            { text: '❄️ WINTER IS COMING - Crypto winter!', effect: 'all', value: -0.25 }
+            { text: '❄️ WINTER IS COMING - Crypto winter!', effect: 'all', value: -0.25 },
+            // 20 more events
+            { text: '🎉 LISTING DAY - New exchange listing!', effect: 'all', value: 0.35 },
+            { text: '😱 PANIC SELL - Everyone sells!', effect: 'all', value: -0.25 },
+            { text: '🤫 INSIDER TIP - Buy now!', effect: 'all', value: 0.20 },
+            { text: '📰 FUD NEWS - Fear spreads!', effect: 'random', value: -0.15 },
+            { text: '🔥 BURN NOTICE - Tokens burned!', effect: 'all', value: 0.18 },
+            { text: '👮‍♂️ SEC NEWS - Regulation worry!', effect: 'all', value: -0.12 },
+            { text: '🚀 PARTNER ANNOUNCEMENT - Big news!', effect: 'all', value: 0.28 },
+            { text: '💻 HACK ALERT - Exchange compromised!', effect: 'random', value: -0.35 },
+            { text: '🌟 CELEBRITY ENDORSEMENT - Stars align!', effect: 'single', value: 0.45 },
+            { text: '📊 WHITEPAPER UPDATE - Game changer!', effect: 'all', value: 0.22 },
+            { text: '🎰 CASINO NIGHT - High volatility!', effect: 'all', value: 0.30 },
+            { text: '😴 SLEEPY MARKET - Nothing happens...', effect: 'none', value: 0 },
+            { text: '🐋 WHALE BUY - Big money moving in!', effect: 'all', value: 0.25 },
+            { text: '🎁 REWARD DROP - Loyalty rewards!', effect: 'cash', value: 300 },
+            { text: '🔒 WALLET UPGRADE - Security boost!', effect: 'all', value: 0.08 },
+            { text: '🤖 BOT WARS - Trading bots fight!', effect: 'all', value: 0.18 },
+            { text: '📱 APP CRASH - Technical issues!', effect: 'random', value: -0.10 },
+            { text: '🌍 GLOBAL NEWS - Economy shifts!', effect: 'all', value: 0.12 },
+            { text: '🎲 GAMBLE SATURDAY - Risk it all!', effect: 'all', value: 0.40 },
+            { text: '💸 STABLECOIN DEPEG - Chaos ensues!', effect: 'all', value: -0.20 },
+            { text: '🏆 TOURNAMENT WINNER - Big prizes!', effect: 'cash', value: 800 },
+            { text: '🔄 HARD FORK - New version!', effect: 'all', value: 0.15 },
+            { text: '🚫 BAN THREAT - Country bans crypto!', effect: 'random', value: -0.30 },
+            { text: '🤝 MERGER NEWS - Big combo!', effect: 'all', value: 0.22 },
+            { text: '👻 GHOST TOWN - Nobody trading!', effect: 'all', value: -0.08 },
+            { text: '🎪 CIRCUS DAY - Everything chaotic!', effect: 'all', value: 0.25 },
+            { text: '💣 BOMB THREAT - Sell everything!', effect: 'all', value: -0.35 },
+            { text: '🌈 RAINBOW MOMENT - All green!', effect: 'all', value: 0.18 },
+            { text: '🥇 GOLD STANDARD - Backed by gold!', effect: 'all', value: 0.28 },
+            { text: '🎭 DRAMA QUEEN - Celebrity feud!', effect: 'random', value: 0.15 }
         ];
         
         // === MAIN APP ===
@@ -168,10 +227,11 @@
             const [currentExchange, setCurrentExchange] = useState(EXCHANGES[0]);
             const [defiDebt, setDefiDebt] = useState(0);
             const [walletCapacity, setWalletCapacity] = useState(500);
-            const [upgrades, setUpgrades] = useState({});
+            const [upgrades, setUpgrades] = useState({}); // { wallet: 2, whaleAlert: 1, ... }
             const [logs, setLogs] = useState(['Day 1 started']);
             const [events, setEvents] = useState(['Welcome to Crypto Wars! Tap coins to trade.']);
             const [gameOver, setGameOver] = useState(false);
+            const [eventEffect, setEventEffect] = useState(null); // 'good', 'bad', 'none'
             const [modal, setModal] = useState(null); // 'trade', 'travel', 'upgrades', 'defi', 'gameover'
             const [tradeModal, setTradeModal] = useState(null);
             const [tradeAmount, setTradeAmount] = useState('0');
@@ -201,24 +261,46 @@
                 // Random price changes
                 const newPrices = { ...prices };
                 CRYPTOS.forEach(c => {
-                    const change = (Math.random() - 0.5) * 0.2 * location.multiplier;
+                    const luckyBonus = (upgrades.luckyCoin || 0) * 0.01;
+                    const insiderBonus = (upgrades.insider || 0) * 0.02;
+                    const change = (Math.random() - 0.5) * 0.2 * location.multiplier + luckyBonus + insiderBonus;
                     newPrices[c.symbol] = c.price * (1 + change);
                 });
                 setPrices(newPrices);
                 
-                // Random event
-                if (Math.random() < 0.3) {
+                // Random event (40% chance now)
+                if (Math.random() < 0.4) {
                     const event = EVENTS[Math.floor(Math.random() * EVENTS.length)];
                     addEvent(event.text);
                     addLog(event.text);
                     
+                    // Set animation effect
+                    if (event.value > 0) {
+                        setEventEffect('good');
+                        setTimeout(() => setEventEffect(null), 500);
+                    } else if (event.value < 0) {
+                        setEventEffect('bad');
+                        setTimeout(() => setEventEffect(null), 500);
+                    }
+                    
                     if (event.effect === 'all') {
                         Object.keys(newPrices).forEach(sym => {
-                            newPrices[sym] *= (1 + event.value);
+                            const fomoReduction = (upgrades.fomoShield || 0) * 0.1;
+                            const adjustedValue = event.value * (1 - fomoReduction);
+                            newPrices[sym] *= (1 + adjustedValue);
                         });
                     } else if (event.effect === 'cash') {
                         setCash(c => c + event.value);
+                    } else if (event.effect === 'single' && event.target) {
+                        newPrices[event.target] *= (1 + event.value);
                     }
+                }
+                
+                // HODL Master daily bonus
+                if (upgrades.hodlMaster && upgrades.hodlMaster > 0) {
+                    const hodlBonus = upgrades.hodlMaster * 50;
+                    setCash(c => c + hodlBonus);
+                    addLog(`💎 HODL bonus: +$${hodlBonus}!`);
                 }
                 
                 // Loan interest (0.5% daily)
@@ -293,8 +375,8 @@
                     return;
                 }
                 setCash(c => c - upgrade.cost);
-                setUpgrades(u => ({ ...u, [key]: true }));
-                addLog(`✅ Bought ${upgrade.name}!`);
+                setUpgrades(u => ({ ...u, [key]: (u[key] || 0) + 1 }));
+                addLog(`✅ Bought ${upgrade.name}! ${upgrade.desc}`);
             };
             
             const handleDefiBorrow = (amount) => {
@@ -334,7 +416,8 @@
             };
             
             const getWalletCapacity = () => {
-                return walletCapacity + (upgrades.wallet || 0) * 5;
+                const walletUpgrades = upgrades.wallet || 0;
+                return walletCapacity + (walletUpgrades * 500);
             };
             
             const getWalletProgress = () => {
@@ -361,7 +444,10 @@
                 ),
                 
                 // Crypto Grid
-                h('div', { className: 'crypto-area' },
+                h('div', { 
+                    className: 'crypto-area ' + (eventEffect === 'good' ? 'event-flash-green' : eventEffect === 'bad' ? 'event-flash-red' : ''),
+                    style: eventEffect ? { transition: 'all 0.3s' } : {}
+                },
                     h('div', { className: 'crypto-grid' },
                         CRYPTOS.map(crypto => {
                             const price = (prices[crypto.symbol] || crypto.price) * location.multiplier * (1 + currentExchange.fee);
@@ -583,7 +669,7 @@
                 
                 // Upgrades Modal
                 modal === 'upgrades' && h('div', { className: 'modal-overlay', onClick: () => setModal(null) },
-                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation() },
+                    h('div', { className: 'modal-content', onClick: e => e.stopPropagation(), style: { maxHeight: '80vh', overflow: 'auto' } },
                         h('div', { className: 'modal-close', onClick: () => setModal(null) }, '×'),
                         h('div', { className: 'modal-title' }, '⚡ UPGRADES'),
                         Object.entries(UPGRADES).map(([key, upg]) => 
@@ -591,7 +677,7 @@
                                 key: key,
                                 style: { 
                                     padding: '12px', 
-                                    background: upgrades[key] ? '#00ff8833' : '#1a1a2e',
+                                    background: (upgrades[key] || 0) > 0 ? '#00ff8833' : '#1a1a2e',
                                     borderRadius: '8px',
                                     marginBottom: '8px',
                                     display: 'flex',
@@ -600,23 +686,20 @@
                                 }
                             },
                                 h('div', null,
-                                    h('div', { style: { fontWeight: 'bold' } }, upg.name),
+                                    h('div', { style: { fontWeight: 'bold' } }, upg.name + (upgrades[key] ? ` (x${upgrades[key]})` : '')),
                                     h('div', { style: { fontSize: '12px', color: '#aaa' } }, upg.desc)
                                 ),
-                                upgrades[key] ?
-                                    h('div', { style: { color: '#00ff88', fontWeight: 'bold' } }, 'OWNED')
-                                :
-                                    h('button', { 
-                                        onClick: () => handleBuyUpgrade(key),
-                                        style: { 
-                                            padding: '8px 16px', 
-                                            background: cash >= upg.cost ? '#ff6b35' : '#333',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            color: '#fff',
-                                            cursor: cash >= upg.cost ? 'pointer' : 'not-allowed'
-                                        }
-                                    }, `$${upg.cost}`)
+                                h('button', { 
+                                    onClick: () => handleBuyUpgrade(key),
+                                    style: { 
+                                        padding: '8px 16px', 
+                                        background: cash >= upg.cost ? '#ff6b35' : '#333',
+                                        border: 'none',
+                                        borderRadius: '6px',
+                                        color: '#fff',
+                                        cursor: cash >= upg.cost ? 'pointer' : 'not-allowed'
+                                    }
+                                }, `$${upg.cost}`)
                             )
                         )
                     )
