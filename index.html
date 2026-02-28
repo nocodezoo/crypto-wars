@@ -61,8 +61,8 @@
         .crypto-btn {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1rem;
+            border-radius: 0.5rem;
+            padding: 0.4rem;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -732,14 +732,6 @@
                         )
                     ),
                     
-                    // QUICK ACTIONS
-                    h('div', { className: 'flex gap-2 mb-5 overflow-x-auto flex-wrap' },
-                        h('button', { onClick: () => setShowModal('travel'), className: 'px-4 py-2 bg-gray-800 rounded-lg font-bold text-sm' }, '✈️ Travel'),
-                        h('button', { onClick: () => setShowModal('upgrades'), className: 'px-4 py-2 bg-purple-600 rounded-lg font-bold text-sm' }, '🔧 Upgrades'),
-                        h('button', { onClick: () => setShowModal('exchange'), className: 'px-4 py-2 bg-gray-700 rounded-lg font-bold text-sm' }, currentExchange.name),
-                        h('button', { onClick: () => setShowModal('portfolio'), className: 'px-4 py-2 bg-gray-700 rounded-lg font-bold text-sm' }, '📊 Portfolio')
-                    ),
-                    
                     // MARKET
                     h('div', { className: 'mb-5' },
                         h('div', { className: 'flex justify-between items-center mb-3' },
@@ -760,14 +752,14 @@
                                 return h('div', { key: symbol, className: 'crypto-btn', onClick: () => buy(symbol) },
                                     h('div', { className: 'flex justify-between items-center mb-1' },
                                         h('div', { className: 'flex items-center gap-2' },
-                                            h('span', { className: 'text-3xl', style: { color: info.color } }, info.icon),
-                                            h('span', { className: 'font-bold text-lg' }, symbol)
+                                            h('span', { className: 'text-xl', style: { color: info.color } }, info.icon),
+                                            h('span', { className: 'font-bold text-sm' }, symbol)
                                         ),
                                         h('span', { className: `text-sm font-bold ${change >= 0 ? 'price-up' : 'price-down'}` }, 
                                             `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`
                                         )
                                     ),
-                                    h('p', { className: 'text-2xl font-bold mono' }, '$' + price.toFixed(price < 1 ? 4 : 0)),
+                                    h('p', { className: 'text-base font-bold mono' }, '$' + price.toFixed(price < 1 ? 4 : 0)),
                                     owned > 0 && h('p', { className: 'text-xs', style: { color: 'var(--text-muted)' } }, 
                                         owned.toFixed(4) + ' = $' + value.toFixed(0)
                                     )
